@@ -1,4 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
+    const openingHourStr = $('#ouverture-lieu').text();
+        const openingHour = parseInt(openingHourStr.split(/[:h]/)[0]);
+        const closingHourStr = $('#fermeture-lieu').text();
+        const closingHour = parseInt(closingHourStr.split(/[:h]/)[0]);
     let container1Data = {};
     let container2Data = {};
     let initialSelectedDate, secondContainerVisible = false;
@@ -232,10 +236,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateCheckboxOptions(selectedDates, containerId) {
-        const openingHourStr = $('#ouverture-lieu').text();
-        const openingHour = parseInt(openingHourStr.split(/[:h]/)[0]);
-        const closingHourStr = $('#fermeture-lieu').text();
-        const closingHour = parseInt(closingHourStr.split(/[:h]/)[0]);
+        
         const disabledHoursElement = document.querySelector('.paragraph-dhours');
         const disabledHoursText = disabledHoursElement.textContent.trim();
         const disabledHours = parseJson(disabledHoursText) || {};
