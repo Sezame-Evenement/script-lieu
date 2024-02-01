@@ -45,20 +45,22 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    function handleTimeSlot(hour, formattedSelectedDate, dataToUpdate, selectedDate, currentlySelectedHours, previouslySelectedHours) {
-        const isSelected = currentlySelectedHours.has(hour);
-        const wasSelected = previouslySelectedHours.has(hour);
+function handleTimeSlot(hour, formattedSelectedDate, dataToUpdate, selectedDate, currentlySelectedHours, previouslySelectedHours) {
+    const isSelected = currentlySelectedHours.has(hour);
+    const wasSelected = previouslySelectedHours.has(hour);
 
-        if (isSelected && !wasSelected) {
-            addTimeRange(hour, formattedSelectedDate, dataToUpdate, selectedDate);
-            addTimeRange(hour - 1, formattedSelectedDate, dataToUpdate, selectedDate);
-            addTimeRange(hour + 1, formattedSelectedDate, dataToUpdate, selectedDate);
-        } else if (!isSelected && wasSelected) {
-            removeTimeRange(hour, formattedSelectedDate, dataToUpdate, selectedDate);
-            removeTimeRange(hour - 1, formattedSelectedDate, dataToUpdate, selectedDate);
-            removeTimeRange(hour + 1, formattedSelectedDate, dataToUpdate, selectedDate);
-        }
+    if (isSelected && !wasSelected) {
+        addTimeRange(hour, formattedSelectedDate, dataToUpdate, selectedDate);
+        addTimeRange(hour - 1, formattedSelectedDate, dataToUpdate, selectedDate);
+        addTimeRange(hour + 1, formattedSelectedDate, dataToUpdate, selectedDate);
+    } else if (!isSelected && wasSelected) {
+        removeTimeRange(hour, formattedSelectedDate, dataToUpdate, selectedDate);
+        removeTimeRange(hour - 1, formattedSelectedDate, dataToUpdate, selectedDate);
+        removeTimeRange(hour + 1, formattedSelectedDate, dataToUpdate, selectedDate);
     }
+}
+
+
 
     function updateFirstDateInput(selectedDates, containerId) {
         let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
