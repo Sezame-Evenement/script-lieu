@@ -55,11 +55,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const wasSelected = previouslySelectedHours.has(hour);
 
         if (isSelected && !wasSelected) {
+            console.log(`Checkbox checked: ${hour}h on ${formattedSelectedDate}`);
             addTimeRange(hour, formattedSelectedDate, dataToUpdate, selectedDate);
             if (hour !== openingHour) {
                 addTimeRange(hour - 1, formattedSelectedDate, dataToUpdate, selectedDate);
             }
         } else if (!isSelected && wasSelected) {
+            console.log(`Checkbox unchecked: ${hour}h on ${formattedSelectedDate}`);
             removeTimeRange(hour, formattedSelectedDate, dataToUpdate, selectedDate);
             if (hour !== openingHour) {
                 removeTimeRange(hour - 1, formattedSelectedDate, dataToUpdate, selectedDate);
@@ -160,6 +162,13 @@ document.addEventListener('DOMContentLoaded', function () {
             let nextDate = new Date(selectedDate);
             nextDate.setDate(nextDate.getDate() + 1);
             removeRangeFromData(0, nextDate, data);
+        } else {
+            let prevDate = new Date(selectedDate);
+            prevDate = adjustDateForHour(hour - 1, prevDate);
+            let nextDate = new Date(selectedDate);
+            nextDate = adjustDateForHour(hour + 1, nextDate);
+            removeRangeFromData(hour - 1, prevDate, data);
+            removeRangeFromData(hour + 1, nextDate, data);
         }
     }
 
