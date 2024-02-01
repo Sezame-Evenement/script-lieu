@@ -216,4 +216,6 @@ document.addEventListener("DOMContentLoaded", function() {
     
         $('.firstdateinput').val(JSON.stringify(mergedData));
     
-    
+    }
+});
+
