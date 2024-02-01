@@ -1,8 +1,9 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener('DOMContentLoaded', function () {
     const openingHourStr = $('#ouverture-lieu').text();
-        const openingHour = parseInt(openingHourStr.split(/[:h]/)[0]);
-        const closingHourStr = $('#fermeture-lieu').text();
-        const closingHour = parseInt(closingHourStr.split(/[:h]/)[0]);
+    const openingHour = parseInt(openingHourStr.split(/[:h]/)[0]);
+    const closingHourStr = $('#fermeture-lieu').text();
+    const closingHour = parseInt(closingHourStr.split(/[:h]/)[0]);
+
     let container1Data = {};
     let container2Data = {};
     let initialSelectedDate, secondContainerVisible = false;
@@ -55,12 +56,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (isSelected && !wasSelected) {
             addTimeRange(hour, formattedSelectedDate, dataToUpdate, selectedDate);
-            addTimeRange(hour - 1, formattedSelectedDate, dataToUpdate, selectedDate);
-            addTimeRange(hour + 1, formattedSelectedDate, dataToUpdate, selectedDate);
+            if (hour !== openingHour) {
+                addTimeRange(hour - 1, formattedSelectedDate, dataToUpdate, selectedDate);
+            }
         } else if (!isSelected && wasSelected) {
             removeTimeRange(hour, formattedSelectedDate, dataToUpdate, selectedDate);
-            removeTimeRange(hour - 1, formattedSelectedDate, dataToUpdate, selectedDate);
-            removeTimeRange(hour + 1, formattedSelectedDate, dataToUpdate, selectedDate);
+            if (hour !== openingHour) {
+                removeTimeRange(hour - 1, formattedSelectedDate, dataToUpdate, selectedDate);
+            }
         }
     }
 
@@ -142,135 +145,92 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!data[targetFormattedDate].includes(range)) {
             data[targetFormattedDate].push(range);
         }
-        
-        // Add one hour before the first selected hour
-        if (hour === parseInt(openingHourStr.split(':')[0])) {
-            addTimeRange(hour - 1, date, data, selectedDate, isPrevDay, isNextDay);
-        }
-        
-        // Add one hour after the last selected hour
-        if (endHour === parseInt(closingHourStr.split(':')[0])) {
-            addTimeRange(hour + 1, date, data, selectedDate, isPrevDay, isNextDay);
-        }
     }
-    
+
     function removeTimeRange(hour, date, data, selectedDate, isPrevDay = false, isNextDay = false) {
         let targetDate = new Date(selectedDate);
         targetDate = adjustDateForHour(hour, targetDate);
         removeRangeFromData(hour, targetDate, data);
-    
-        if (hour === parseInt(openingHourStr.split(':')[0])) {
-            let prevDate = new Date(selectedDate);
-            prevDate.setDate(prevDate.getDate() - 1);
-            removeRangeFromData(hour - 1, prevDate, data);
-        } else if (hour === parseInt(closingHourStr.split(':')[0])) {
-            let nextDate = new Date(selectedDate);
-            nextDate.setDate(nextDate.getDate() + 1);
-            removeRangeFromData(hour + 1, nextDate, data);
-        }
-    }
-    
-    
-    function adjustDateForHour(hour, date) {
-        if (hour < 0) {
-            hour = 23;
-            date.setDate(date.getDate() - 1);
-        } else if (hour > 23) {
-            hour = 0;
-            date.setDate(date.getDate() + 1);
-        }
-        return date;
-    }
-    
-
-
-    function removeRangeFromData(hour, date, data) {
-        const targetFormattedDate = date.toLocaleDateString('fr-CA');
-        const endHour = (hour + 1) % 24;
-        const range = `${hour}h à ${endHour}h`;
-
-        if (data[targetFormattedDate]) {
-            const index = data[targetFormattedDate].indexOf(range);
-            if (index !== -1) {
-                data[targetFormattedDate].splice(index, 1);
-            }
-        }
 
         if (hour === 0) {
-            removeRangeFromData(23, adjustDateForHour(-1, new Date(date)), data);
+            let prevDate = new Date(selectedDate);
+            prevDate.setDate(prevDate.getDate() - 1);
+            removeRangeFromData(23, prevDate, data);
         } else if (hour === 23) {
-            removeRangeFromData(0, adjustDateForHour(24, new Date(date)), data);
+            let nextDate = new Date(selectedDate);
+            nextDate.setDate(nextDate.getDate() + 1);
+            removeRangeFromData(0, nextDate, data);
         }
+    }
+
+    function removeRangeFromData(hour, date, data) {
+        const formattedDate = date.toLocaleDateString('fr-CA');
+        const endHour = (hour + 1) % 24;
+        const range = `${hour}h à ${endHour}h`;
+        if (data[formattedDate]) {
+            const index = data[formattedDate].indexOf(range);
+            if (index !== -1) {
+                data[formattedDate].splice(index, 1);
+                if (data[formattedDate].length === 0) {
+                    delete data[formattedDate];
+                }
+            }
+        }
+    }
+
+    function adjustDateForHour(hour, date) {
+        const newDate = new Date(date);
+        newDate.setHours(hour, 0, 0, 0);
+        return newDate;
     }
 
     function mergeDataAndUpdateInput() {
-        let mergedData = {};
-        const existingData = getExistingData();
-        let allDates = new Set([...Object.keys(container1Data), ...Object.keys(container2Data), ...Object.keys(existingData)]);
-
-        allDates.forEach(date => {
-            let dataFromContainer1 = container1Data[date] || [];
-            let dataFromContainer2 = container2Data[date] || [];
-            let existingDataForDate = existingData[date] || [];
-
-            mergedData[date] = [...new Set([...dataFromContainer1, ...dataFromContainer2, ...existingDataForDate])];
-        });
-
-        for (let date in mergedData) {
-            if (mergedData[date].length === 0) {
-                delete mergedData[date];
-            }
-        }
-
-        $('.firstdateinput').val(JSON.stringify(mergedData));
-    }
-
-    function getExistingData() {
-        const existingDataElement = document.querySelector('.paragraph-dhours');
-        return existingDataElement ? parseJson(existingDataElement.textContent.trim()) : {};
-    }
-
-    function parseJson(jsonString) {
-        try { return JSON.parse(jsonString); }
-        catch (error) { console.error("Error parsing JSON:", error); return null; }
+        const mergedData = { ...container1Data, ...container2Data };
+        dateFullDisabledInput.value = JSON.stringify(mergedData);
     }
 
     function updateCheckboxOptions(selectedDates, containerId) {
-        
-        const disabledHoursElement = document.querySelector('.paragraph-dhours');
-        const disabledHoursText = disabledHoursElement.textContent.trim();
-        const disabledHours = parseJson(disabledHoursText) || {};
-        const checkboxContainer = $(`.checkbox-container[data-id="${containerId}"]`);
-        checkboxContainer.empty();
-        const upperLimitHour = (containerId === 'container2') ? closingHour : 24;
-        for (let hour = 0; hour < upperLimitHour; hour++) {
-            const isWithinRange = (closingHour > openingHour) ? (hour >= openingHour && hour < closingHour) : (hour >= openingHour || hour < closingHour);
-            if (isWithinRange) {
-                const isDisabled = selectedDates.some(selectedDate => {
-                    const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
-                    return (disabledHours[formattedSelectedDate] || [])
-                        .some(disabledHour => {
-                            const [start, end] = disabledHour.split(' à ');
-                            const [startHour] = start.split('h');
-                            const [endHour] = end.split('h');
-                            const selectedHour = parseInt(hour);
-                            return (startHour === '23' && endHour === '0' && (selectedHour === 23 || selectedHour === 0)) || (startHour !== '23' && selectedHour >= parseInt(startHour) && selectedHour < parseInt(endHour));
-                        });
-                });
-                const formattedHour = `${hour.toString().padStart(2, '0')}h00 à ${((hour + 1) % 24).toString().padStart(2, '0')}h00`;
-                const checkboxDiv = $("<div>", { class: "checkbox-item" });
-                const label = $("<label>", { text: formattedHour, for: `checkbox-${containerId}-${hour}`, style: isDisabled ? "color: #777; text-decoration: line-through; cursor: not-allowed;" : "" });
-                const checkbox = $("<input>", { type: "checkbox", value: `${hour}:00`, id: `checkbox-${containerId}-${hour}`, class: "checkbox-hour", disabled: isDisabled, name: `checkbox-${containerId}` });
-                checkboxDiv.append(label);
-                checkboxDiv.append(checkbox);
-                checkboxContainer.append(checkboxDiv);
+        let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
+        const dateIndex = containerId === 'container1' ? 0 : 1;
+        const selectedDate = selectedDates[dateIndex];
+        if (!selectedDate) return;
+
+        const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
+        const checkboxContainer = $(`.checkbox-container[data-id='${containerId}']`);
+        const selectedHours = new Set();
+
+        checkboxContainer.find('.checkbox-hour:checked').each(function () {
+            const hour = parseInt(this.value.split(':')[0]);
+            selectedHours.add(hour);
+        });
+
+        for (let hour = openingHour; hour < closingHour; hour++) {
+            const formattedHour = `${hour.toString().padStart(2, '0')}:00`;
+            const checkbox = $(`<input type="checkbox" class="checkbox-hour" value="${formattedHour}" />`);
+            const label = $(`<label>${formattedHour}</label>`);
+            if (selectedHours.has(hour)) {
+                checkbox.prop('checked', true);
             }
+            checkboxContainer.append(checkbox);
+            checkboxContainer.append(label);
+        }
+
+        if (dataToUpdate[formattedSelectedDate]) {
+            dataToUpdate[formattedSelectedDate].forEach(range => {
+                const [startHour] = range.split('h');
+                const formattedHour = `${startHour.toString().padStart(2, '0')}:00`;
+                checkboxContainer.find(`.checkbox-hour[value="${formattedHour}"]`).prop('checked', true);
+            });
         }
     }
 
     function updateMoreDaysButton(selectedDates) {
-        const moreDaysButton = $(".moredays");
-        moreDaysButton.prop('disabled', selectedDates.length > 0 && (selectedDates[0].getDate() === tomorrow.getDate() || selectedDates.length > 1));
+        const moreDaysButton = $('#more-days-button');
+        if (selectedDates.length === 1) {
+            moreDaysButton.show();
+        } else {
+            moreDaysButton.hide();
+        }
     }
 
     function formatDate(date) {
