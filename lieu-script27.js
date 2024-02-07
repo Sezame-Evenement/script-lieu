@@ -35,6 +35,21 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    function updateAdditionalHours(currentlySelectedHours, dateStr, data) {
+    if (currentlySelectedHours.size === 0) {
+        // If no hours are selected, no additional hours need to be added or removed
+        return;
+    }
+
+    let sortedHours = [...currentlySelectedHours].sort((a, b) => a - b);
+    let firstHour = sortedHours[0];
+    let lastHour = sortedHours[sortedHours.length - 1];
+
+    // Adjust for adding hours before first and after last, considering day transition
+    addTimeRange(firstHour - 1, dateStr, data);
+    addTimeRange(lastHour + 1, dateStr, data);
+}
+
     const dateFullDisabledInput = document.querySelector('#datefulldisabled');
 
     document.addEventListener('change', function (event) {
