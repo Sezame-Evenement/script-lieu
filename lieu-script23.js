@@ -1,8 +1,9 @@
+
 document.addEventListener("DOMContentLoaded", function () {
     const openingHourStr = $('#ouverture-lieu').text();
-        const openingHour = parseInt(openingHourStr.split(/[:h]/)[0]);
-        const closingHourStr = $('#fermeture-lieu').text();
-        const closingHour = parseInt(closingHourStr.split(/[:h]/)[0]);
+    const openingHour = parseInt(openingHourStr.split(/[:h]/)[0]);
+    const closingHourStr = $('#fermeture-lieu').text();
+    const closingHour = parseInt(closingHourStr.split(/[:h]/)[0]);
     let container1Data = {};
     let container2Data = {};
     let initialSelectedDate, secondContainerVisible = false;
@@ -49,21 +50,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    function handleTimeSlot(hour, formattedSelectedDate, dataToUpdate, selectedDate, currentlySelectedHours, previouslySelectedHours) {
-        const isSelected = currentlySelectedHours.has(hour);
-        const wasSelected = previouslySelectedHours.has(hour);
-
-        if (isSelected && !wasSelected) {
-            addTimeRange(hour, formattedSelectedDate, dataToUpdate, selectedDate);
-            addTimeRange(hour - 1, formattedSelectedDate, dataToUpdate, selectedDate);
-            addTimeRange(hour + 1, formattedSelectedDate, dataToUpdate, selectedDate);
-        } else if (!isSelected && wasSelected) {
-            removeTimeRange(hour, formattedSelectedDate, dataToUpdate, selectedDate);
-            removeTimeRange(hour - 1, formattedSelectedDate, dataToUpdate, selectedDate);
-            removeTimeRange(hour + 1, formattedSelectedDate, dataToUpdate, selectedDate);
-        }
-    }
-
     function updateFirstDateInput(selectedDates, containerId) {
         let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
         const dateIndex = containerId === 'container1' ? 0 : 1;
@@ -71,106 +57,60 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!selectedDate) return;
 
         const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
+        const previouslySelectedHours = new Set(dataToUpdate[formattedSelectedDate] ? dataToUpdate[formattedSelectedDate].map(range => parseInt(range.split('h')[0])) : []);
         const checkboxContainer = $(`.checkbox-container[data-id='${containerId}']`);
+        const currentlySelectedHours = new Set(checkboxContainer.find('.checkbox-hour:checked').get().map(input => parseInt(input.value.split(':')[0])));
 
-        const previouslySelectedHours = new Set();
-        if (dataToUpdate[formattedSelectedDate]) {
-            dataToUpdate[formattedSelectedDate].forEach(range => {
-                const startHour = parseInt(range.split('h')[0]);
-                previouslySelectedHours.add(startHour);
-            });
-        }
-
-        const currentlySelectedHours = new Set();
-        checkboxContainer.find('.checkbox-hour:checked').each(function () {
-            const hour = parseInt(this.value.split(':')[0]);
-            currentlySelectedHours.add(hour);
-        });
-
-        for (let hour = 0; hour < 24; hour++) {
-            handleTimeSlot(hour, formattedSelectedDate, dataToUpdate, selectedDate, currentlySelectedHours, previouslySelectedHours);
-        }
+        updateHourSelection(dataToUpdate, formattedSelectedDate, true); 
 
         mergeDataAndUpdateInput();
     }
 
-    function updateDateFullDisabled(selectedDates) {
-        const updatedData = {};
-        selectedDates.forEach(selectedDate => {
-            const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
-            const checkboxContainer = $(`.checkbox-container[data-id='container1'], .checkbox-container[data-id='container2']`);
-            const selectedHours = new Set();
-
-            checkboxContainer.find('.checkbox-hour:checked').each(function () {
-                const hour = parseInt(this.value.split(':')[0]);
-                selectedHours.add(hour);
-            });
-
-            selectedHours.forEach(hour => {
-                if (hour === 0) {
-                    addTimeRange(23, formattedSelectedDate, updatedData, selectedDate, true);
-                } else if (!selectedHours.has(hour - 1)) {
-                    addTimeRange(hour - 1, formattedSelectedDate, updatedData, selectedDate);
-                }
-
-                addTimeRange(hour, formattedSelectedDate, updatedData, selectedDate);
-
-                if (hour === 23) {
-                    addTimeRange(0, formattedSelectedDate, updatedData, selectedDate, false, true);
-                } else if (!selectedHours.has(hour + 1)) {
-                    addTimeRange(hour + 1, formattedSelectedDate, updatedData, selectedDate);
-                }
-            });
-        });
-
-        dateFullDisabledInput.value = JSON.stringify(updatedData);
+    function hourToRangeString(hour) {
+        let startHour = hour % 24;
+        let endHour = (hour + 1) % 24;
+        return `${startHour}h à ${endHour}h`;
     }
 
-    function addTimeRange(hour, date, data, selectedDate, isPrevDay = false, isNextDay = false) {
-        const targetDate = new Date(selectedDate);
-        if (isPrevDay) {
-            targetDate.setDate(targetDate.getDate() - 1);
-        } else if (isNextDay) {
-            targetDate.setDate(targetDate.getDate() + 1);
-        }
-        const targetFormattedDate = targetDate.toLocaleDateString('fr-CA');
-        const endHour = (hour + 1) % 24;
-        const range = `${hour}h à ${endHour}h`;
-        if (!data[targetFormattedDate]) {
-            data[targetFormattedDate] = [];
-        }
-        if (!data[targetFormattedDate].includes(range)) {
-            data[targetFormattedDate].push(range);
-        }
-        
-        // Add one hour before the first selected hour
-        if (hour === parseInt(openingHourStr.split(':')[0])) {
-            addTimeRange(hour - 1, date, data, selectedDate, isPrevDay, isNextDay);
-        }
-        
-        // Add one hour after the last selected hour
-        if (endHour === parseInt(closingHourStr.split(':')[0])) {
-            addTimeRange(hour + 1, date, data, selectedDate, isPrevDay, isNextDay);
+    function updateHourSelection(data, dateStr, add = true) {
+        let hours = data[dateStr] ? data[dateStr].map(range => parseInt(range.split('h')[0])) : [];
+        hours.sort((a, b) => a - b);
+
+        if (hours.length) {
+            let firstHour = hours[0];
+            let lastHour = hours[hours.length - 1];
+            let prevHour = (firstHour - 1 + 24) % 24;
+            let nextHour = (lastHour + 1) % 24;
+
+            if (add) {
+                if (!hours.includes(prevHour)) data[dateStr].push(hourToRangeString(prevHour));
+                if (!hours.includes(nextHour)) data[dateStr].push(hourToRangeString(nextHour));
+            } else {
+                data[dateStr] = data[dateStr].filter(range => {
+                    let hour = parseInt(range.split('h')[0]);
+                    return hour !== prevHour && hour !== nextHour;
+                });
+            }
         }
     }
-    
-    function removeTimeRange(hour, date, data, selectedDate, isPrevDay = false, isNextDay = false) {
-        let targetDate = new Date(selectedDate);
-        targetDate = adjustDateForHour(hour, targetDate);
-        removeRangeFromData(hour, targetDate, data);
-    
-        if (hour === parseInt(openingHourStr.split(':')[0])) {
-            let prevDate = new Date(selectedDate);
-            prevDate.setDate(prevDate.getDate() - 1);
-            removeRangeFromData(hour - 1, prevDate, data);
-        } else if (hour === parseInt(closingHourStr.split(':')[0])) {
-            let nextDate = new Date(selectedDate);
-            nextDate.setDate(nextDate.getDate() + 1);
-            removeRangeFromData(hour + 1, nextDate, data);
+
+    function addTimeRange(hour, dateStr, data) {
+        let formattedHour = hourToRangeString(hour);
+        if (!data[dateStr]) data[dateStr] = [];
+        if (!data[dateStr].includes(formattedHour)) {
+            data[dateStr].push(formattedHour);
+            updateHourSelection(data, dateStr);
         }
     }
-    
-    
+
+    function removeTimeRange(hour, dateStr, data) {
+        let targetRange = hourToRangeString(hour);
+        if (data[dateStr] && data[dateStr].includes(targetRange)) {
+            data[dateStr] = data[dateStr].filter(range => range !== targetRange);
+            updateHourSelection(data, dateStr, false);
+        }
+    }
+
     function adjustDateForHour(hour, date) {
         if (hour < 0) {
             hour = 23;
@@ -236,7 +176,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateCheckboxOptions(selectedDates, containerId) {
-        
+        const openingHourStr = $('#ouverture-lieu').text();
+        const openingHour = parseInt(openingHourStr.split(/[:h]/)[0]);
+        const closingHourStr = $('#fermeture-lieu').text();
+        const closingHour = parseInt(closingHourStr.split(/[:h]/)[0]);
         const disabledHoursElement = document.querySelector('.paragraph-dhours');
         const disabledHoursText = disabledHoursElement.textContent.trim();
         const disabledHours = parseJson(disabledHoursText) || {};
