@@ -65,112 +65,115 @@ document.addEventListener("DOMContentLoaded", function () {
         const dateIndex = containerId === 'container1' ? 0 : 1;
         const selectedDate = selectedDates[dateIndex];
         if (!selectedDate) return;
-
+    
         const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
-        const checkboxContainer = $(`.checkbox-container[data-id='${containerId}']`);
-
-        const previouslySelectedHours = new Set();
-        if (dataToUpdate[formattedSelectedDate]) {
-            dataToUpdate[formattedSelectedDate].forEach(range => {
-                const startHour = parseInt(range.split('h')[0]);
-                previouslySelectedHours.add(startHour);
-            });
-        }
-
-        const currentlySelectedHours = new Set();
-        checkboxContainer.find('.checkbox-hour:checked').each(function () {
-            const hour = parseInt(this.value.split(':')[0]);
-            currentlySelectedHours.add(hour);
+        let selectedHours = [];
+    
+        $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).each(function () {
+            const hour = parseInt($(this).val().split(':')[0]);
+            selectedHours.push(hour);
         });
-
-        for (let hour = 0; hour < 24; hour++) {
-            handleTimeSlot(hour, formattedSelectedDate, dataToUpdate, selectedDate, currentlySelectedHours, previouslySelectedHours);
+    
+        selectedHours.sort((a, b) => a - b);
+        const firstHour = selectedHours[0];
+        const lastHour = selectedHours[selectedHours.length - 1];
+    
+        // Adjust for adding hours before first and after last, considering day transition
+        if (selectedHours.length > 0) {
+            addTimeRange(firstHour - 1, formattedSelectedDate, dataToUpdate);
+            addTimeRange(lastHour + 1, formattedSelectedDate, dataToUpdate);
         }
-
+    
         mergeDataAndUpdateInput();
     }
-
+    
     function updateDateFullDisabled(selectedDates) {
         const updatedData = {};
         selectedDates.forEach(selectedDate => {
             const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
-            const checkboxContainer = $(`.checkbox-container[data-id='container1'], .checkbox-container[data-id='container2']`);
-            const selectedHours = new Set();
-
-            checkboxContainer.find('.checkbox-hour:checked').each(function () {
-                const hour = parseInt(this.value.split(':')[0]);
-                selectedHours.add(hour);
+            let selectedHours = [];
+    
+            $(`.checkbox-container[data-id='container1'], .checkbox-container[data-id='container2'] .checkbox-hour:checked`).each(function () {
+                const hour = parseInt($(this).val().split(':')[0]);
+                selectedHours.push(hour);
             });
-
-            selectedHours.forEach(hour => {
-                if (hour === 0) {
-                    addTimeRange(23, formattedSelectedDate, updatedData, selectedDate, true);
-                } else if (!selectedHours.has(hour - 1)) {
-                    addTimeRange(hour - 1, formattedSelectedDate, updatedData, selectedDate);
-                }
-
-                addTimeRange(hour, formattedSelectedDate, updatedData, selectedDate);
-
-                if (hour === 23) {
-                    addTimeRange(0, formattedSelectedDate, updatedData, selectedDate, false, true);
-                } else if (!selectedHours.has(hour + 1)) {
-                    addTimeRange(hour + 1, formattedSelectedDate, updatedData, selectedDate);
-                }
-            });
+    
+            selectedHours = [...new Set(selectedHours)]; // Remove duplicates
+            selectedHours.sort((a, b) => a - b);
+    
+            // Handle adding for the first and last hours considering day transition
+            if (selectedHours.length > 0) {
+                const firstHour = selectedHours[0];
+                const lastHour = selectedHours[selectedHours.length - 1];
+    
+                addTimeRange(firstHour - 1, formattedSelectedDate, updatedData);
+                addTimeRange(lastHour + 1, formattedSelectedDate, updatedData);
+            }
         });
-
+    
         dateFullDisabledInput.value = JSON.stringify(updatedData);
     }
-
-    // Utility function to convert hour to range string
-function hourToRangeString(hour) {
-    let startHour = hour % 24;
-    let endHour = (hour + 1) % 24;
-    return `${startHour}h à ${endHour}h`;
-}
-
-// Adjusted to add or remove the hour before the first and after the last time slot correctly
-function updateHourSelection(data, dateStr, add = true) {
-    let hours = data[dateStr] ? data[dateStr].map(range => parseInt(range.split('h')[0])) : [];
-    hours.sort((a, b) => a - b); // Ensure hours are sorted for logical addition/removal
-
-    if (hours.length) {
-        let firstHour = hours[0];
-        let lastHour = hours[hours.length - 1];
-        console.log(`Current hours for ${dateStr}:`, hours, `First: ${firstHour}, Last: ${lastHour}`);
-
-        // Determine hours to add/remove
-        let prevHour = (firstHour - 1 + 24) % 24;
-        let nextHour = (lastHour + 1) % 24;
-
-        if (add) {
-            // Add range before first and after last if not already included
-            if (!hours.includes(prevHour)) data[dateStr].push(hourToRangeString(prevHour));
-            if (!hours.includes(nextHour)) data[dateStr].push(hourToRangeString(nextHour));
-        } else {
-            // Remove additional hours if they were added before
-            data[dateStr] = data[dateStr].filter(range => {
-                let hour = parseInt(range.split('h')[0]);
-                return hour !== prevHour && hour !== nextHour;
-            });
+    
+    function hourToRangeString(hour) {
+        let startHour = hour % 24;
+        let endHour = (hour + 1) % 24;
+        return `${startHour}h à ${endHour}h`;
+    }
+    
+    function updateHourSelection(data, dateStr, add = true) {
+        // This function's usage has been streamlined in updateFirstDateInput
+    }
+    
+    function addTimeRange(hour, dateStr, data) {
+        if (hour < 0) {
+            dateStr = adjustDateStr(dateStr, -1);
+            hour = 23;
+        } else if (hour > 23) {
+            dateStr = adjustDateStr(dateStr, 1);
+            hour = 0;
+        }
+        const range = hourToRangeString(hour);
+        if (!data[dateStr]) data[dateStr] = [];
+        if (!data[dateStr].includes(range)) {
+            data[dateStr].push(range);
         }
     }
-    console.log(`Updated hours for ${dateStr}:`, data[dateStr]);
-}
-
+    
+    function adjustDateStr(dateStr, days) {
+        const date = new Date(dateStr);
+        date.setDate(date.getDate() + days);
+        return date.toISOString().split('T')[0];
+    }
+    
 // Simplify the addition of time ranges to correct issues with day transitions and chronological order
 function addTimeRange(hour, dateStr, data) {
-    // Ensure the date string is correctly handled for transitions
-    let formattedHour = hourToRangeString(hour);
-    if (!data[dateStr]) data[dateStr] = [];
-    if (!data[dateStr].includes(formattedHour)) {
-        data[dateStr].push(formattedHour);
-        console.log(`Added ${formattedHour} to ${dateStr}`);
+    let newDateStr, newHour;
+    if (hour < 0) {
+        // Adjust for adding an hour before midnight (e.g., -1 becomes 23, and date is decremented)
+        newDateStr = adjustDateStr(dateStr, -1);
+        newHour = 23;
+    } else if (hour > 23) {
+        // Adjust for adding an hour after 23h (e.g., 24 becomes 0, and date is incremented)
+        newDateStr = adjustDateStr(dateStr, 1);
+        newHour = 0;
+    } else {
+        newDateStr = dateStr;
+        newHour = hour;
     }
-
-    // Update hour selection to handle the first and last slots correctly
-    updateHourSelection(data, dateStr);
+    let range = hourToRangeString(newHour);
+    if (!data[newDateStr]) data[newDateStr] = [];
+    if (!data[newDateStr].includes(range)) {
+        data[newDateStr].push(range);
+    }
 }
+
+function adjustDateStr(dateStr, dayOffset) {
+    let dateParts = dateStr.split('-').map(part => parseInt(part, 10)); // Assumes dateStr format is "YYYY-MM-DD"
+    let date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+    date.setDate(date.getDate() + dayOffset);
+    return date.toISOString().split('T')[0]; // Returns adjusted date in "YYYY-MM-DD" format
+}
+
 
 // Simplify the removal of time ranges
 function removeTimeRange(hour, dateStr, data) {
