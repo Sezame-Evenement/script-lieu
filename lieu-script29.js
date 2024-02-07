@@ -73,25 +73,46 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!selectedDate) return;
     
         const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
-        let selectedHours = [];
+        const previouslySelectedHoursSet = new Set(dataToUpdate[formattedSelectedDate]?.map(range => parseInt(range.split('h')[0], 10)));
+        const currentlySelectedHoursSet = new Set();
     
         $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).each(function () {
-            const hour = parseInt($(this).val().split(':')[0]);
-            selectedHours.push(hour);
+            const hour = parseInt($(this).val().split(':')[0], 10);
+            currentlySelectedHoursSet.add(hour);
         });
     
-        selectedHours.sort((a, b) => a - b);
-        const firstHour = selectedHours[0];
-        const lastHour = selectedHours[selectedHours.length - 1];
+        // Determine newly selected and deselected hours
+        const newlySelectedHours = [...currentlySelectedHoursSet].filter(hour => !previouslySelectedHoursSet.has(hour));
+        const deselectedHours = [...previouslySelectedHoursSet].filter(hour => !currentlySelectedHoursSet.has(hour));
     
-        // Adjust for adding hours before first and after last, considering day transition
-        if (selectedHours.length > 0) {
-            addTimeRange(firstHour - 1, formattedSelectedDate, dataToUpdate);
-            addTimeRange(lastHour + 1, formattedSelectedDate, dataToUpdate);
-        }
+        // Add newly selected hours
+        newlySelectedHours.forEach(hour => {
+            addTimeRange(hour, formattedSelectedDate, dataToUpdate);
+        });
+    
+        // Remove deselected hours
+        deselectedHours.forEach(hour => {
+            removeTimeRange(hour, formattedSelectedDate, dataToUpdate);
+        });
+    
+        // Adjust for adding or removing hours before first and after last, if necessary
+        updateAdditionalHours(currentlySelectedHoursSet, formattedSelectedDate, dataToUpdate);
     
         mergeDataAndUpdateInput();
     }
+    
+    function updateAdditionalHours(currentlySelectedHoursSet, dateStr, data) {
+        if (currentlySelectedHoursSet.size > 0) {
+            const sortedHours = [...currentlySelectedHoursSet].sort((a, b) => a - b);
+            const firstHour = sortedHours[0];
+            const lastHour = sortedHours[sortedHours.length - 1];
+    
+            // Correctly adjust to add or remove additional hours based on the current selection
+            addTimeRange(firstHour - 1, dateStr, data);
+            addTimeRange(lastHour + 1, dateStr, data);
+        }
+    }
+    
     
     function updateDateFullDisabled(selectedDates) {
         const updatedData = {};
