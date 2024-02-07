@@ -73,33 +73,50 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!selectedDate) return;
     
         const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
-        const previouslySelectedHoursSet = new Set(dataToUpdate[formattedSelectedDate]?.map(range => parseInt(range.split('h')[0], 10)));
-        const currentlySelectedHoursSet = new Set();
+        let previouslySelectedHoursSet = new Set(dataToUpdate[formattedSelectedDate]?.map(range => hourFromRangeString(range)));
+        let currentlySelectedHoursSet = new Set();
     
         $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).each(function () {
             const hour = parseInt($(this).val().split(':')[0], 10);
             currentlySelectedHoursSet.add(hour);
         });
     
-        // Determine newly selected and deselected hours
-        const newlySelectedHours = [...currentlySelectedHoursSet].filter(hour => !previouslySelectedHoursSet.has(hour));
-        const deselectedHours = [...previouslySelectedHoursSet].filter(hour => !currentlySelectedHoursSet.has(hour));
+        // Remove deselected hours and their adjacent added hours if necessary
+        [...previouslySelectedHoursSet].forEach(hour => {
+            if (!currentlySelectedHoursSet.has(hour)) {
+                removeTimeRange(hour, formattedSelectedDate, dataToUpdate); // Remove the deselected hour
+    
+                // If this was an edge hour, check if we need to remove the adjacent hours as well
+                if (hour === 0 || hour === 23) {
+                    adjustTransitionalHourRemoval(hour, formattedSelectedDate, dataToUpdate, currentlySelectedHoursSet);
+                }
+            }
+        });
     
         // Add newly selected hours
-        newlySelectedHours.forEach(hour => {
-            addTimeRange(hour, formattedSelectedDate, dataToUpdate);
+        [...currentlySelectedHoursSet].forEach(hour => {
+            if (!previouslySelectedHoursSet.has(hour)) {
+                addTimeRange(hour, formattedSelectedDate, dataToUpdate); // Add the newly selected hour
+            }
         });
-    
-        // Remove deselected hours
-        deselectedHours.forEach(hour => {
-            removeTimeRange(hour, formattedSelectedDate, dataToUpdate);
-        });
-    
-        // Adjust for adding or removing hours before first and after last, if necessary
-        updateAdditionalHours(currentlySelectedHoursSet, formattedSelectedDate, dataToUpdate);
     
         mergeDataAndUpdateInput();
     }
+    
+    function adjustTransitionalHourRemoval(deselectedHour, dateStr, data, currentSelection) {
+        // Assuming deselection of "0h à 1h", check if "23h" on the previous day should be removed
+        if (deselectedHour === 0 && !currentSelection.has(1)) {
+            let previousDayStr = adjustDateStr(dateStr, -1);
+            removeTimeRange(23, previousDayStr, data);
+        }
+    
+        // Assuming deselection of "23h à 0h", check if "0h" on the next day should be removed
+        if (deselectedHour === 23 && !currentSelection.has(22)) {
+            let nextDayStr = adjustDateStr(dateStr, 1);
+            removeTimeRange(0, nextDayStr, data);
+        }
+    }
+    
     
     function updateAdditionalHours(currentlySelectedHoursSet, dateStr, data) {
         if (currentlySelectedHoursSet.size > 0) {
@@ -169,16 +186,31 @@ document.addEventListener("DOMContentLoaded", function () {
     
     function removeTimeRange(hour, dateStr, data) {
         let newDateStr = dateStr;
+        let adjustedHour = hour;
+    
+        // Adjust date if hour indicates a day transition
         if (hour < 0) {
-            newDateStr = adjustDateStr(dateStr, -1); // Adjust for previous day
-            hour = 23;
+            newDateStr = adjustDateStr(dateStr, -1); // Adjust to the previous day for hour "23"
+            adjustedHour = 23;
         } else if (hour > 23) {
-            newDateStr = adjustDateStr(dateStr, 1); // Adjust for next day
-            hour = 0;
+            newDateStr = adjustDateStr(dateStr, 1); // Adjust to the next day for hour "0"
+            adjustedHour = 0;
         }
-        const rangeToRemove = hourToRangeString(hour);
-        data[newDateStr] = (data[newDateStr] || []).filter(range => range !== rangeToRemove);
+    
+        // Convert the adjusted hour back to range format for comparison
+        const rangeToRemove = hourToRangeString(adjustedHour);
+    
+        // Filter out the rangeToRemove from the data for the adjusted date
+        if (data[newDateStr]) {
+            data[newDateStr] = data[newDateStr].filter(range => range !== rangeToRemove);
+    
+            // If removing this range leaves the date with no more ranges, consider removing the date entry entirely
+            if (data[newDateStr].length === 0) {
+                delete data[newDateStr];
+            }
+        }
     }
+    
 
     function adjustDateStr(dateStr, dayOffset) {
         const date = new Date(dateStr);
