@@ -60,32 +60,42 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    function updateFirstDateInput(selectedDates, containerId) {
-        let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
-        const dateIndex = containerId === 'container1' ? 0 : 1;
-        const selectedDate = selectedDates[dateIndex];
-        if (!selectedDate) return;
-    
-        const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
-        let selectedHours = [];
-    
-        $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).each(function () {
-            const hour = parseInt($(this).val().split(':')[0]);
-            selectedHours.push(hour);
-        });
-    
-        selectedHours.sort((a, b) => a - b);
-        const firstHour = selectedHours[0];
-        const lastHour = selectedHours[selectedHours.length - 1];
-    
-        // Adjust for adding hours before first and after last, considering day transition
-        if (selectedHours.length > 0) {
-            addTimeRange(firstHour - 1, formattedSelectedDate, dataToUpdate);
-            addTimeRange(lastHour + 1, formattedSelectedDate, dataToUpdate);
+   function updateFirstDateInput(selectedDates, containerId) {
+    let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
+    const dateIndex = containerId === 'container1' ? 0 : 1;
+    const selectedDate = selectedDates[dateIndex];
+    if (!selectedDate) return;
+
+    const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
+    let previouslySelectedHours = new Set(dataToUpdate[formattedSelectedDate] ? dataToUpdate[formattedSelectedDate].map(range => parseInt(range.split('h')[0])) : []);
+    let currentlySelectedHours = new Set();
+
+    $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).each(function () {
+        const hour = parseInt($(this).val().split(':')[0]);
+        currentlySelectedHours.add(hour);
+    });
+
+    // Determine deselected hours by comparing previous and current selections
+    let deselectedHours = new Set([...previouslySelectedHours].filter(x => !currentlySelectedHours.has(x)));
+
+    // Handle deselected hours
+    deselectedHours.forEach(hour => {
+        removeTimeRange(hour, formattedSelectedDate, dataToUpdate);
+    });
+
+    // Handle newly selected hours
+    currentlySelectedHours.forEach(hour => {
+        if (!previouslySelectedHours.has(hour)) {
+            addTimeRange(hour, formattedSelectedDate, dataToUpdate);
         }
-    
-        mergeDataAndUpdateInput();
-    }
+    });
+
+    // After handling selections and deselections, update the additional hours
+    updateAdditionalHours(currentlySelectedHours, formattedSelectedDate, dataToUpdate);
+
+    mergeDataAndUpdateInput();
+}
+
     
     function updateDateFullDisabled(selectedDates) {
         const updatedData = {};
