@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let container1Data = {};
     let container2Data = {};
     let initialSelectedDate, secondContainerVisible = false;
+
     const today = new Date(), tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const dateInput = flatpickr("#date", {
@@ -9,7 +10,6 @@ document.addEventListener("DOMContentLoaded", function () {
         disable: [function (date) {
             return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
         }],
-        
         onChange: function (selectedDates) {
             console.log("Date selection changed", selectedDates);
             if (selectedDates.length > 0) {
@@ -36,36 +36,30 @@ document.addEventListener("DOMContentLoaded", function () {
             resetSelections();
             mergeDataAndUpdateInput();
         }
-        
     });
 
     const dateFullDisabledInput = document.querySelector('#datefulldisabled');
 
-
-    function resetSelections() {
-        container1Data = {};
-        container2Data = {};
-        // Ensure this also triggers reprocessing of selections if needed
-        processSelections();
-    }
-    
     $('.moredays').click(function() {
         secondContainerVisible = !secondContainerVisible;
         if (secondContainerVisible) {
+            const secondDate = new Date(initialSelectedDate);
+            secondDate.setDate(secondDate.getDate() + 1);
+            $(".date-heading").eq(1).text(formatDate(secondDate));
             $(".checkbox-container[data-id='container2']").show();
             $(".date-heading").eq(1).show();
-            // Further logic to update the heading and checkboxes for the second container
+            updateCheckboxOptions([secondDate], "container2");
         } else {
-            $(".checkbox-container[data-id='container2']").hide();
+            $(".checkbox-container").eq(1).hide();
             $(".date-heading").eq(1).hide();
         }
     });
 
-    // Add event listeners for checkboxes in both containers
-    $('.checkbox-container').on('change', '.checkbox-hour', function() {
-        const containerId = $(this).closest('.checkbox-container').data('id');
-        // Logic to process checkbox selections based on the container
-    });
+    function resetSelections() {
+        container1Data = {};
+        container2Data = {};
+        processSelections();
+    }
 
     
     function setupSecondContainer() {
