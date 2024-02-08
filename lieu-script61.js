@@ -259,13 +259,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Add one hour before the first and after the last selection, if there are any selections.
     if (selectedHours.length > 0) {
-        const firstHour = selectedHours[0];
-        const lastHour = selectedHours[selectedHours.length - 1];
-        addTimeRange(firstHour - 1, formattedSelectedDate, dataToUpdate);
-        addTimeRange(lastHour + 1, formattedSelectedDate, dataToUpdate);
+        const firstHour = parseInt(selectedHours[0].split(':')[0], 10); // Assuming 'selectedHours' format is 'HH:mm'
+        const lastHour = parseInt(selectedHours[selectedHours.length - 1].split(':')[0], 10);
+    
+        // Parsing hour might be necessary depending on the format in 'selectedHours'
+        addTimeRange(firstHour - 1, key, dataToUpdate);
+        addTimeRange(lastHour + 1, key, dataToUpdate);
     } else {
-        // If no hours are currently selected, ensure transitional hours are removed.
-        removeTransitionalHours(formattedSelectedDate, dataToUpdate);
+        // Ensure transitional hours are correctly handled using 'key'
+        removeTransitionalHours(key, dataToUpdate);
     }
     console.log(`Data to update after handling ${containerId}:`, dataToUpdate);
 
