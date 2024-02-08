@@ -224,51 +224,26 @@ document.addEventListener("DOMContentLoaded", function () {
     function updateFirstDateInput(selectedDates, containerId) {
         console.log(`Updating first date input for ${containerId}`);
     
-        // Determine the correct date based on the container ID
         let dateIndex = containerId === 'container1' ? 0 : (selectedDates.length > 1 ? 1 : 0);
-        let selectedDate = selectedDates[dateIndex];
-    
-        // Ensure the selectedDate is valid before proceeding
-        if (!selectedDate || isNaN(selectedDate.getTime())) {
-            console.error(`Invalid date selected for ${containerId}.`);
-            return;
-        }
-    
-        let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
-    
-        // Generate a key for the date in the format YYYY-MM-DD
-        let key = selectedDate.toISOString().split('T')[0];
-    
-        console.log(`${containerId} selected date key:`, key);
-    
-        // Fetch all hours currently selected in the UI for this date
-        const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
-            .map(function() { return $(this).val(); })
-            .get();
-    
-        // Update or initialize the array for this date in the data structure
-        if (!dataToUpdate[key]) {
-            dataToUpdate[key] = [];
-        }
-    
-        selectedHours.forEach(hour => {
-            if (!dataToUpdate[key].includes(hour)) {
-                dataToUpdate[key].push(hour);
-            }
-        });
+    let selectedDate = selectedDates[dateIndex];
 
-    // Add one hour before the first and after the last selection, if there are any selections.
-    if (selectedHours.length > 0) {
-        const firstHour = parseInt(selectedHours[0].split(':')[0], 10); // Assuming 'selectedHours' format is 'HH:mm'
-        const lastHour = parseInt(selectedHours[selectedHours.length - 1].split(':')[0], 10);
-    
-        // Parsing hour might be necessary depending on the format in 'selectedHours'
-        addTimeRange(firstHour - 1, key, dataToUpdate);
-        addTimeRange(lastHour + 1, key, dataToUpdate);
-    } else {
-        // Ensure transitional hours are correctly handled using 'key'
-        removeTransitionalHours(key, dataToUpdate);
-    }
+    // Generate the correct key for accessing and storing date-specific data
+    let key = `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
+
+    console.log(`Selected date for ${containerId}:`, key);
+
+    let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
+
+    // Fetch and format selected hours
+    const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
+        .map(function() {
+            let hourValue = parseInt($(this).val().split(':')[0], 10);
+            return `${hourValue}h à ${(hourValue + 1) % 24}h`;
+        })
+        .get();
+
+    // Update the data structure with the selected hours, using the correct date key
+    dataToUpdate[key] = selectedHours;
     console.log(`Data to update after handling ${containerId}:`, dataToUpdate);
 
     mergeDataAndUpdateInput();
@@ -324,19 +299,23 @@ function removeTransitionalHours(dateStr, data) {
         // This function's usage has been streamlined in updateFirstDateInput
     }
     
-    function addTimeRange(hour, dateStr, data) {
-        let newDateStr = dateStr;
-        if (hour < 0) {
-            newDateStr = adjustDateStr(dateStr, -1); // Correctly adjust to the previous day
-            hour = 23;
-        } else if (hour > 23) {
-            newDateStr = adjustDateStr(dateStr, 1); // Correctly adjust to the next day
-            hour = 0;
-        }
-        const range = hourToRangeString(hour);
-        if (!data[newDateStr]) data[newDateStr] = [];
-        if (!data[newDateStr].includes(range)) {
-            data[newDateStr].push(range);
+    function addTimeRange(hour, key, dataToUpdate) {
+        // Correctly add time range considering day transition
+        if (hour === 23) {
+            let nextDayKey = adjustDateStr(key, 1);
+            dataToUpdate[nextDayKey] = dataToUpdate[nextDayKey] || [];
+            dataToUpdate[nextDayKey].push("0h à 1h");
+        } else if (hour === 0) {
+            let prevDayKey = adjustDateStr(key, -1);
+            dataToUpdate[prevDayKey] = dataToUpdate[prevDayKey] || [];
+            dataToUpdate[prevDayKey].push("23h à 0h");
+        } else {
+            // Normal hour range addition
+            let hourRange = `${hour}h à ${(hour + 1) % 24}h`;
+            dataToUpdate[key] = dataToUpdate[key] || [];
+            if (!dataToUpdate[key].includes(hourRange)) {
+                dataToUpdate[key].push(hourRange);
+            }
         }
     }
     
@@ -354,12 +333,7 @@ function removeTransitionalHours(dateStr, data) {
     }
 
     function adjustDateStr(dateStr, dayOffset) {
-        console.log(`adjustDateStr input: ${dateStr}`);
         let date = new Date(dateStr);
-        if (isNaN(date.getTime())) { // Check if date is invalid
-            console.error("Invalid date provided to adjustDateStr:", dateStr);
-            return null; // Or handle the error appropriately
-        }
         date.setDate(date.getDate() + dayOffset);
         return date.toISOString().split('T')[0];
     }
