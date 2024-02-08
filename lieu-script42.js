@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
         disable: [function (date) {
             return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
         }],
+        
         onChange: function (selectedDates) {
             console.log("Date selection changed", selectedDates);
             if (selectedDates.length > 0) {
@@ -35,7 +36,11 @@ document.addEventListener("DOMContentLoaded", function () {
             resetSelections();
             mergeDataAndUpdateInput();
         }
+        
     });
+
+    const dateFullDisabledInput = document.querySelector('#datefulldisabled');
+
 
     function resetSelections() {
         container1Data = {};
@@ -229,31 +234,22 @@ function removeTransitionalHours(dateStr, data) {
     }
     
     
-    function updateDateFullDisabled(selectedDates) {
+    function updateDateFullDisabled() {
+        if (!dateFullDisabledInput) {
+            console.error('dateFullDisabledInput is not defined.');
+            return;
+        }
+    
         const updatedData = {};
-        selectedDates.forEach(selectedDate => {
-            const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
-            let selectedHours = [];
-    
-            $(`.checkbox-container[data-id='container1'], .checkbox-container[data-id='container2'] .checkbox-hour:checked`).each(function () {
-                const hour = parseInt($(this).val().split(':')[0]);
-                selectedHours.push(hour);
-            });
-    
-            selectedHours = [...new Set(selectedHours)]; // Remove duplicates
-            selectedHours.sort((a, b) => a - b);
-    
-            // Handle adding for the first and last hours considering day transition
-            if (selectedHours.length > 0) {
-                const firstHour = selectedHours[0];
-                const lastHour = selectedHours[selectedHours.length - 1];
-    
-                addTimeRange(firstHour - 1, formattedSelectedDate, updatedData);
-                addTimeRange(lastHour + 1, formattedSelectedDate, updatedData);
+        Object.keys(container1Data).concat(Object.keys(container2Data)).forEach(date => {
+            const hours = [...(container1Data[date] || []), ...(container2Data[date] || [])];
+            if (hours.length > 0) {
+                updatedData[date] = hours;
             }
         });
     
         dateFullDisabledInput.value = JSON.stringify(updatedData);
+        console.log("Updated dateFullDisabledInput:", dateFullDisabledInput.value);
     }
     
     function hourToRangeString(hour) {
