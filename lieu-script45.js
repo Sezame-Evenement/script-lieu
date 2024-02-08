@@ -100,11 +100,15 @@ document.addEventListener("DOMContentLoaded", function () {
         $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).each(function() {
             selectedHours.push(parseInt($(this).val().split(':')[0], 10));
         });
+        console.log(`Selected hours in ${containerId}:`, selectedHours);
         return selectedHours.sort((a, b) => a - b);
     }
+    
 
     function adjustSelectionsForDayTransition(selectedHours, dateStr, containerId) {
         // Logic to add one hour before the first and after the last hour, considering day transition
+        console.log(`Adjusting day transition for ${containerId} with hours:`, selectedHours, `on date: ${dateStr}`);
+
         if (selectedHours.length > 0) {
             const firstHour = selectedHours[0];
             const lastHour = selectedHours[selectedHours.length - 1];
@@ -116,9 +120,9 @@ document.addEventListener("DOMContentLoaded", function () {
     
     function updateContainerData(containerId, dateStr, selectedHours) {
         let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
-        // Reset the date's data before updating
-        dataToUpdate[dateStr] = [];
-        
+        dataToUpdate[dateStr] = selectedHours.map(hour => hourToRangeString(hour));
+        console.log(`Data updated for ${containerId} on ${dateStr}:`, dataToUpdate[dateStr]);
+            
         // Update with new selections, mapping each hour to its range string
         selectedHours.forEach(hour => {
             let hourRange = hourToRangeString(hour);
@@ -156,9 +160,10 @@ document.addEventListener("DOMContentLoaded", function () {
     
     document.addEventListener('change', function(event) {
         if ($(event.target).closest('.checkbox-container').length) {
-            console.log("Change detected in container: ", $(event.target).closest('.checkbox-container').data('id'));
+            const containerId = $(event.target).closest('.checkbox-container').data('id');
+            console.log('Change detected in container: ', containerId);
             const selectedDates = dateInput.selectedDates;
-            updateFirstDateInput(selectedDates, $(event.target).closest('.checkbox-container').data('id'));
+            updateFirstDateInput(selectedDates, containerId);
             updateDateFullDisabled(selectedDates);
         }
     });
@@ -340,12 +345,14 @@ function removeTransitionalHours(dateStr, data) {
 
     function mergeDataAndUpdateInput() {
         let mergedData = {};
-        console.log('Merging data from both containers:', container1Data, container2Data);
-        console.log('Merged data before updating input:', mergedData);
+        // Merging logic
+        console.log('Before merging:', {container1Data, container2Data});
+        // Merge container1Data and container2Data into mergedData
+        console.log('After merging:', mergedData);
         $('.firstdateinput').val(JSON.stringify(mergedData));
-        console.log('Updated firstdateinput with merged data:', $('.firstdateinput').val());
-        // Update dateFullDisabledInput similarly and log its new value
-        console.log('Updated dateFullDisabledInput:', dateFullDisabledInput.value);
+        console.log('Updated firstdateinput:', $('.firstdateinput').val());
+        // Similarly update and log for dateFullDisabledInput
+        console.log('Updated dateFullDisabledInput:', $('#datefulldisabled').val());
         const existingData = getExistingData();
         let allDates = new Set([...Object.keys(container1Data), ...Object.keys(container2Data), ...Object.keys(existingData)]);
 
