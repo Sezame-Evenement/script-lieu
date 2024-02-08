@@ -223,58 +223,35 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateFirstDateInput(selectedDates, containerId) {
         console.log(`Updating first date input for ${containerId}`);
-        
+    
         let dateIndex = containerId === 'container1' ? 0 : (selectedDates.length > 1 ? 1 : 0);
         let selectedDate = selectedDates[dateIndex];
-        
+    
         // Generate the correct key for accessing and storing date-specific data
         let key = `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
-        
+    
         let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
-        
+    
         // Initialize data structure for the key if it doesn't exist
-        dataToUpdate[key] = dataToUpdate[key] || [];
-        
+        if (!dataToUpdate[key]) {
+            dataToUpdate[key] = [];
+        }
+    
         const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
             .map(function() {
-                return parseInt($(this).val().split(':')[0], 10);
+                return $(this).val(); // Using the value attribute directly, which should be in the correct format
             })
-            .get()
-            .sort((a, b) => a - b);
-        
-        // Check and add one hour before the first and one hour after the last hour
-        if (selectedHours.length > 0) {
-            const firstHour = selectedHours[0];
-            const lastHour = selectedHours[selectedHours.length - 1];
-            
-            // Adjust for day transition if the first hour is 0
-            if (firstHour === 0) {
-                let prevDayKey = adjustDateStr(key, -1);
-                dataToUpdate[prevDayKey] = dataToUpdate[prevDayKey] || [];
-                dataToUpdate[prevDayKey].push("23h à 0h");
-            } else {
-                let hourBeforeFirst = firstHour - 1;
-                dataToUpdate[key].push(hourToRangeString(hourBeforeFirst));
-            }
-            
-            // Adjust for day transition if the last hour is 23
-            if (lastHour === 23) {
-                let nextDayKey = adjustDateStr(key, 1);
-                dataToUpdate[nextDayKey] = dataToUpdate[nextDayKey] || [];
-                dataToUpdate[nextDayKey].push("0h à 1h");
-            } else {
-                let hourAfterLast = lastHour + 1;
-                dataToUpdate[key].push(hourToRangeString(hourAfterLast));
-            }
-        }
-        
-        // Ensure selected hours are also added
+            .get();
+    
+        // Correct hour range formatting and handling transitions
         selectedHours.forEach(hour => {
-            let hourRange = hourToRangeString(hour);
-            if (!dataToUpdate[key].includes(hourRange)) {
-                dataToUpdate[key].push(hourRange);
+            if (!dataToUpdate[key].includes(hour)) {
+                dataToUpdate[key].push(hour);
             }
         });
+    
+        // Handling the addition of one hour before the first and one hour after the last hour, with proper transition between days
+        handleHourTransitions(selectedHours, key, dataToUpdate);
     
         console.log(`Data to update after handling ${containerId}:`, dataToUpdate);
     
@@ -283,24 +260,44 @@ document.addEventListener("DOMContentLoaded", function () {
     
     
 
-function removeTransitionalHours(dateStr, data) {
-    // Remove 23h from the previous day and 0h from the next day if they exist as orphaned entries.
-    const previousDayStr = adjustDateStr(dateStr, -1);
-    const nextDayStr = adjustDateStr(dateStr, 1);
-    removeTimeRange(23, previousDayStr, data, true); // Force removal without checking
-    removeTimeRange(0, nextDayStr, data, true); // Force removal without checking
-}
-
+    function handleHourTransitions(selectedHours, key, dataToUpdate) {
+        if (selectedHours.length > 0) {
+            // Convert hours back to numbers for comparison and sorting
+            let numericHours = selectedHours.map(hour => parseInt(hour.split('h')[0]));
+            numericHours.sort((a, b) => a - b);
     
-    function updateAdditionalHours(currentlySelectedHoursSet, dateStr, data) {
-        if (currentlySelectedHoursSet.size > 0) {
-            const sortedHours = [...currentlySelectedHoursSet].sort((a, b) => a - b);
-            const firstHour = sortedHours[0];
-            const lastHour = sortedHours[sortedHours.length - 1];
+            let firstHour = numericHours[0];
+            let lastHour = numericHours[numericHours.length - 1];
     
-            // Correctly adjust to add or remove additional hours based on the current selection
-            addTimeRange(firstHour - 1, dateStr, data);
-            addTimeRange(lastHour + 1, dateStr, data);
+            // Add one hour before the first selected hour if not 0
+            if (firstHour !== 0) {
+                let hourBeforeFirst = firstHour - 1;
+                let hourBeforeFirstRange = hourToRangeString(hourBeforeFirst);
+                if (!dataToUpdate[key].includes(hourBeforeFirstRange)) {
+                    dataToUpdate[key].push(hourBeforeFirstRange);
+                }
+            } else {
+                let prevDayKey = adjustDateStr(key, -1);
+                dataToUpdate[prevDayKey] = dataToUpdate[prevDayKey] || [];
+                if (!dataToUpdate[prevDayKey].includes("23h à 0h")) {
+                    dataToUpdate[prevDayKey].push("23h à 0h");
+                }
+            }
+    
+            // Add one hour after the last selected hour if not 23
+            if (lastHour !== 23) {
+                let hourAfterLast = lastHour + 1;
+                let hourAfterLastRange = hourToRangeString(hourAfterLast);
+                if (!dataToUpdate[key].includes(hourAfterLastRange)) {
+                    dataToUpdate[key].push(hourAfterLastRange);
+                }
+            } else {
+                let nextDayKey = adjustDateStr(key, 1);
+                dataToUpdate[nextDayKey] = dataToUpdate[nextDayKey] || [];
+                if (!dataToUpdate[nextDayKey].includes("0h à 1h")) {
+                    dataToUpdate[nextDayKey].push("0h à 1h");
+                }
+            }
         }
     }
     
@@ -324,10 +321,10 @@ function removeTransitionalHours(dateStr, data) {
     }
     
     function hourToRangeString(hour) {
-        // Adjust for 24-hour wrap-around
-        let startHour = hour;
-        let endHour = (hour + 1) % 24;
-        return `${startHour.toString().padStart(2, '0')}h à ${endHour.toString().padStart(2, '0')}h`;
+        // Adjust for 24-hour format and correct string format
+        let startHour = hour.toString().padStart(2, '0');
+        let endHour = ((hour + 1) % 24).toString().padStart(2, '0');
+        return `${startHour}h à ${endHour === '00' ? endHour : endHour + 'h'}`; // Adjusting the end hour format
     }
     
     function updateHourSelection(data, dateStr, add = true) {
