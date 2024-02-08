@@ -262,41 +262,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function handleHourTransitions(selectedHours, key, dataToUpdate) {
         if (selectedHours.length > 0) {
-            // Convert hours back to numbers for comparison and sorting
-            let numericHours = selectedHours.map(hour => parseInt(hour.split('h')[0]));
-            numericHours.sort((a, b) => a - b);
+            let firstHour = parseInt(selectedHours[0].split('h')[0]);
+            let lastHour = parseInt(selectedHours[selectedHours.length - 1].split('h à ')[1]);
     
-            let firstHour = numericHours[0];
-            let lastHour = numericHours[numericHours.length - 1];
-    
-            // Add one hour before the first selected hour if not 0
-            if (firstHour !== 0) {
-                let hourBeforeFirst = firstHour - 1;
-                let hourBeforeFirstRange = hourToRangeString(hourBeforeFirst);
-                if (!dataToUpdate[key].includes(hourBeforeFirstRange)) {
-                    dataToUpdate[key].push(hourBeforeFirstRange);
-                }
+            // Add hour before first if it's not the very start of the day
+            if (firstHour > 0) {
+                let prevHour = `${firstHour - 1}h à ${firstHour}h`;
+                dataToUpdate[key] = [prevHour, ...dataToUpdate[key]];
             } else {
+                // Handle transition from 0h to the previous day
                 let prevDayKey = adjustDateStr(key, -1);
-                dataToUpdate[prevDayKey] = dataToUpdate[prevDayKey] || [];
-                if (!dataToUpdate[prevDayKey].includes("23h à 0h")) {
-                    dataToUpdate[prevDayKey].push("23h à 0h");
-                }
+                dataToUpdate[prevDayKey] = [...(dataToUpdate[prevDayKey] || []), "23h à 0h"];
             }
     
-            // Add one hour after the last selected hour if not 23
-            if (lastHour !== 23) {
-                let hourAfterLast = lastHour + 1;
-                let hourAfterLastRange = hourToRangeString(hourAfterLast);
-                if (!dataToUpdate[key].includes(hourAfterLastRange)) {
-                    dataToUpdate[key].push(hourAfterLastRange);
-                }
+            // Add hour after last if it's not the very end of the day
+            if (lastHour < 24) {
+                let nextHour = `${lastHour}h à ${lastHour + 1}h`;
+                dataToUpdate[key].push(nextHour);
             } else {
+                // Handle transition from 23h to the next day
                 let nextDayKey = adjustDateStr(key, 1);
-                dataToUpdate[nextDayKey] = dataToUpdate[nextDayKey] || [];
-                if (!dataToUpdate[nextDayKey].includes("0h à 1h")) {
-                    dataToUpdate[nextDayKey].push("0h à 1h");
-                }
+                dataToUpdate[nextDayKey] = ["0h à 1h", ...(dataToUpdate[nextDayKey] || [])];
             }
         }
     }
