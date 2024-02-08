@@ -73,34 +73,40 @@ function updateFirstDateInput(selectedDates, containerId) {
     if (!selectedDate) return;
 
     const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
-    let allSelectedHours = [];
+    let currentSelections = dataToUpdate[formattedSelectedDate] || [];
 
-    // Collect all currently selected hours
-    $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).each(function () {
-        const hour = parseInt($(this).val().split(':')[0], 10);
-        allSelectedHours.push(hour);
-    });
-
-    // Sort to find the chronological first and last selections
-    allSelectedHours.sort((a, b) => a - b);
-    const firstHour = allSelectedHours[0];
-    const lastHour = allSelectedHours[allSelectedHours.length - 1];
-
-    // Clear previous data for the date to handle deselection
+    // Clear selections for the date to handle deselection.
     dataToUpdate[formattedSelectedDate] = [];
 
-    // Re-add the hours for current selections including adjustments
-    allSelectedHours.forEach(hour => {
-        addTimeRange(hour, formattedSelectedDate, dataToUpdate);
-    });
+    // Fetch all hours currently selected in the UI for this date.
+    const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
+        .map(function() { return parseInt($(this).val().split(':')[0], 10); })
+        .get()
+        .sort((a, b) => a - b);
 
-    // Add one hour before the first and after the last selection if there are selections
-    if (allSelectedHours.length > 0) {
+    // Re-add selected hours, adjusting for added hours before the first and after the last selection.
+    selectedHours.forEach(hour => addTimeRange(hour, formattedSelectedDate, dataToUpdate));
+
+    // Add one hour before the first and after the last selection, if there are any selections.
+    if (selectedHours.length > 0) {
+        const firstHour = selectedHours[0];
+        const lastHour = selectedHours[selectedHours.length - 1];
         addTimeRange(firstHour - 1, formattedSelectedDate, dataToUpdate);
         addTimeRange(lastHour + 1, formattedSelectedDate, dataToUpdate);
+    } else {
+        // If no hours are currently selected, ensure transitional hours are removed.
+        removeTransitionalHours(formattedSelectedDate, dataToUpdate);
     }
 
     mergeDataAndUpdateInput();
+}
+
+function removeTransitionalHours(dateStr, data) {
+    // Remove 23h from the previous day and 0h from the next day if they exist as orphaned entries.
+    const previousDayStr = adjustDateStr(dateStr, -1);
+    const nextDayStr = adjustDateStr(dateStr, 1);
+    removeTimeRange(23, previousDayStr, data, true); // Force removal without checking
+    removeTimeRange(0, nextDayStr, data, true); // Force removal without checking
 }
 
     
