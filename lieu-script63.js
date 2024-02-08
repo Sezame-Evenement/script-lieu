@@ -225,29 +225,55 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log(`Updating first date input for ${containerId}`);
     
         let dateIndex = containerId === 'container1' ? 0 : (selectedDates.length > 1 ? 1 : 0);
-    let selectedDate = selectedDates[dateIndex];
-
-    // Generate the correct key for accessing and storing date-specific data
-    let key = `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
-
-    console.log(`Selected date for ${containerId}:`, key);
-
-    let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
-
-    // Fetch and format selected hours
-    const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
-        .map(function() {
-            let hourValue = parseInt($(this).val().split(':')[0], 10);
-            return `${hourValue}h à ${(hourValue + 1) % 24}h`;
-        })
-        .get();
-
-    // Update the data structure with the selected hours, using the correct date key
-    dataToUpdate[key] = selectedHours;
-    console.log(`Data to update after handling ${containerId}:`, dataToUpdate);
-
-    mergeDataAndUpdateInput();
-}
+        let selectedDate = selectedDates[dateIndex];
+    
+        if (!selectedDate) {
+            console.error(`No selected date for ${containerId}`);
+            return;
+        }
+    
+        // Format the date key as "YYYY-MM-DD"
+        let key = `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
+    
+        let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
+    
+        // Reset data for the current date to handle deselections
+        dataToUpdate[key] = dataToUpdate[key] || [];
+    
+        // Fetch all hours currently selected in the UI for this date
+        const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
+            .map(function() { return parseInt($(this).val().split(':')[0], 10); })
+            .get();
+    
+        // Ensure data structure for previous and next day exists
+        let previousDayKey = adjustDateStr(key, -1);
+        let nextDayKey = adjustDateStr(key, 1);
+        dataToUpdate[previousDayKey] = dataToUpdate[previousDayKey] || [];
+        dataToUpdate[nextDayKey] = dataToUpdate[nextDayKey] || [];
+    
+        selectedHours.forEach(hour => {
+            // Map hour to range string and add to current day
+            let hourRange = hourToRangeString(hour);
+            if (!dataToUpdate[key].includes(hourRange)) {
+                dataToUpdate[key].push(hourRange);
+            }
+    
+            // Add transitional hours for 0 and 23 hours to previous and next day respectively
+            if (hour === 0 && !dataToUpdate[previousDayKey].includes("23h à 0h")) {
+                dataToUpdate[previousDayKey].push("23h à 0h");
+            } else if (hour === 23 && !dataToUpdate[nextDayKey].includes("0h à 1h")) {
+                dataToUpdate[nextDayKey].push("0h à 1h");
+            }
+        });
+    
+        // Sort the hours for readability and consistency
+        dataToUpdate[key].sort((a, b) => parseInt(a) - parseInt(b));
+    
+        console.log(`Updated data for ${containerId}:`, dataToUpdate);
+    
+        mergeDataAndUpdateInput();
+    }
+    
 
 function removeTransitionalHours(dateStr, data) {
     // Remove 23h from the previous day and 0h from the next day if they exist as orphaned entries.
