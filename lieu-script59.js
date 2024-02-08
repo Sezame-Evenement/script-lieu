@@ -222,34 +222,43 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     function updateFirstDateInput(selectedDates, containerId) {
-        let dateIndex = containerId === 'container1' ? 0 : 1;
-        if (!selectedDates[dateIndex]) {
-            console.warn(`No selected date for ${containerId}.`);
-            return; // Exit if no date is selected for the current container
+        console.log(`Updating first date input for ${containerId}`);
+    
+        // Determine the correct date based on the container ID
+        let selectedDate = selectedDates[0]; // Default to the first selected date
+        if (containerId === 'container2' && selectedDates.length > 1) {
+            selectedDate = selectedDates[1]; // Use the second selected date if it exists
+        } else if (containerId === 'container2') {
+            // If there's no second date explicitly selected, calculate the next day for container2
+            selectedDate = new Date(selectedDate);
+            selectedDate.setDate(selectedDate.getDate() + 1);
+        }
+    
+        // Ensure the selectedDate is valid before proceeding
+        if (!selectedDate || isNaN(selectedDate.getTime())) {
+            console.error(`Invalid date selected for ${containerId}.`);
+            return;
         }
     
         let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
     
-        // Use the selected date directly from the flatpickr's selectedDates array
-        const selectedDate = selectedDates[dateIndex];
-    
-        // Convert selectedDate to an ISO format string or use a consistent format for keys
-        // Ensure month and day are zero-padded to two digits
-        let month = selectedDate.getMonth() + 1;
-        month = month < 10 ? '0' + month : month;
-        let day = selectedDate.getDate();
-        day = day < 10 ? '0' + day : day;
-        let key = `${selectedDate.getFullYear()}-${month}-${day}`;
+        // Create a key for the date to use with dataToUpdate
+        let key = selectedDate.toISOString().split('T')[0]; // Format the date as YYYY-MM-DD
     
         console.log(`${containerId} selected date key:`, key);
     
         // Fetch all hours currently selected in the UI for this date.
         const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
-            .map(function() { return $(this).val(); }) // Use the value directly, assuming it's in a consistent format like 'HH:MM'
+            .map(function() { return $(this).val(); })
             .get();
     
-        // Ensure data structure for the date exists
+        // Update the data structure for this date
         if (!dataToUpdate[key]) dataToUpdate[key] = [];
+        selectedHours.forEach(hour => {
+            if (!dataToUpdate[key].includes(hour)) {
+                dataToUpdate[key].push(hour);
+            }
+        });
     
         // Process the selected hours
         selectedHours.forEach(hour => {
