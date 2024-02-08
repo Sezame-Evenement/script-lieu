@@ -220,18 +220,19 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 function updateFirstDateInput(selectedDates, containerId) {
-    console.log(`Updating first date input for ${containerId}`);
+    console.log(`Updating first date input for ${containerId}: selectedDates =`, selectedDates);
+    
+    // Determine the correct index based on the container ID to handle selectedDates accordingly
+    let dateIndex = containerId === 'container1' ? 0 : (selectedDates.length > 1 ? 1 : 0);
+    if (selectedDates[dateIndex] === undefined) {
+        console.error(`No selected date for ${containerId}.`);
+        return; // Exit if no date is selected for the current container
+    }
 
     let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
-    const dateIndex = containerId === 'container1' ? 0 : 1;
     const selectedDate = selectedDates[dateIndex];
-    if (!selectedDate) return;
-
-    const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
-    let currentSelections = dataToUpdate[formattedSelectedDate] || [];
-
-    // Clear selections for the date to handle deselection.
-    dataToUpdate[formattedSelectedDate] = [];
+    const formattedSelectedDate = formatDate(selectedDate); // Ensure this uses the correct format
+    console.log(`${containerId} selected date:`, formattedSelectedDate);
 
     // Fetch all hours currently selected in the UI for this date.
     const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
@@ -252,6 +253,7 @@ function updateFirstDateInput(selectedDates, containerId) {
         // If no hours are currently selected, ensure transitional hours are removed.
         removeTransitionalHours(formattedSelectedDate, dataToUpdate);
     }
+    console.log(`Data to update after handling ${containerId}:`, dataToUpdate);
 
     mergeDataAndUpdateInput();
 }
