@@ -2,6 +2,8 @@ document.addEventListener("DOMContentLoaded", function () {
     let container1Data = {};
     let container2Data = {};
     let initialSelectedDate, secondContainerVisible = false;
+
+    // Initialize flatpickr for date selection
     const today = new Date(), tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const dateInput = flatpickr("#date", {
@@ -9,57 +11,79 @@ document.addEventListener("DOMContentLoaded", function () {
         disable: [function (date) {
             return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
         }],
-        
         onChange: function (selectedDates) {
             console.log("Date selection changed", selectedDates);
-            if (selectedDates.length > 0) {
-                initialSelectedDate = selectedDates[0];
-                $(".date-heading").eq(0).text(formatDate(selectedDates[0]));
-                updateCheckboxOptions(selectedDates, "container1");
-                updateMoreDaysButton(selectedDates);
-            }
-            if (secondContainerVisible) {
-                $(".checkbox-container").eq(1).hide();
-                $(".date-heading").eq(1).hide();
-                secondContainerVisible = false;
-            }
-            if (selectedDates.length > 1) {
-                const secondDate = selectedDates[1];
-                const secondCheckboxContainer = $(".checkbox-container[data-id='container2']");
-                secondCheckboxContainer.html($(".checkbox-container[data-id='container1']").html());
-                updateCheckboxOptions([secondDate], "container2");
-                $(".date-heading").eq(1).text(formatDate(secondDate));
-                $(".date-heading").eq(1).show();
-                secondCheckboxContainer.show();
-                secondContainerVisible = true;
-            }
-            resetSelections();
-            mergeDataAndUpdateInput();
+            initialSelectedDate = selectedDates.length > 0 ? selectedDates[0] : null;
+            handleDateChange(selectedDates);
         }
-        
     });
 
-    const dateFullDisabledInput = document.querySelector('#datefulldisabled');
-
-
-    function resetSelections() {
-        container1Data = {};
-        container2Data = {};
-        // Ensure this also triggers reprocessing of selections if needed
+    function handleDateChange(selectedDates) {
+        updateDateHeadings(selectedDates);
+        resetSelections();
+        toggleSecondContainerVisibility(selectedDates);
         processSelections();
     }
-    
-    $('.moredays').click(function() {
-        secondContainerVisible = !secondContainerVisible; // Toggle visibility
-        console.log("More days button clicked, second container visibility: ", secondContainerVisible);
 
-        if (secondContainerVisible) {
-            setupSecondContainer();
+    // Updates the date headings based on selected dates
+    function updateDateHeadings(selectedDates) {
+        if (selectedDates.length > 0) {
+            $(".date-heading").eq(0).text(formatDate(selectedDates[0]));
+            updateCheckboxOptions(selectedDates, "container1");
+            updateMoreDaysButton(selectedDates);
+        }
+    }
+
+    // Toggles the visibility of the second container based on the number of selected dates
+    function toggleSecondContainerVisibility(selectedDates) {
+        if (selectedDates.length > 1) {
+            const secondDate = selectedDates[1];
+            secondContainerVisible = true;
+            showSecondContainer(secondDate);
         } else {
-            $(".checkbox-container").eq(1).hide();
-            $(".date-heading").eq(1).hide();
+            secondContainerVisible = false;
+            hideSecondContainer();
+        }
+    }
+
+    // Show the second container and update its options
+    function showSecondContainer(secondDate) {
+        $(".checkbox-container[data-id='container2']").html($(".checkbox-container[data-id='container1']").html());
+        updateCheckboxOptions([secondDate], "container2");
+        $(".date-heading").eq(1).text(formatDate(secondDate)).show();
+        $(".checkbox-container[data-id='container2']").show();
+    }
+
+    // Hide the second container
+    function hideSecondContainer() {
+        $(".checkbox-container").eq(1).hide();
+        $(".date-heading").eq(1).hide();
+    }
+
+
+  
+    
+
+
+    $('.moredays').click(function() {
+        secondContainerVisible = !secondContainerVisible;
+        console.log("More days button clicked, second container visibility: ", secondContainerVisible);
+        if (secondContainerVisible) {
+            const secondDate = new Date(initialSelectedDate);
+            secondDate.setDate(secondDate.getDate() + 1);
+            showSecondContainer(secondDate);
+        } else {
+            hideSecondContainer();
         }
     });
+
+  
+    function resetSelections() {
+        console.log("Resetting selections");
+        container1Data = {};
+        container2Data = {};
+    }
+
     
     function setupSecondContainer() {
         const secondDate = new Date(initialSelectedDate);
@@ -75,11 +99,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function processSelections() {
         console.log("Processing selections for both containers");
-        processContainerSelections('container1', formatDate(initialSelectedDate));
-        if (secondContainerVisible) {
-            const nextDay = new Date(initialSelectedDate);
-            nextDay.setDate(nextDay.getDate() + 1);
-            processContainerSelections('container2', formatDate(nextDay));
+        if (initialSelectedDate) {
+            processContainerSelections('container1', formatDate(initialSelectedDate));
+            if (secondContainerVisible) {
+                const nextDay = new Date(initialSelectedDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                processContainerSelections('container2', formatDate(nextDay));
+            }
         }
         mergeDataAndUpdateInput(); // Combine data from both containers
     }
@@ -87,20 +113,23 @@ document.addEventListener("DOMContentLoaded", function () {
     function processContainerSelections(containerId, dateStr) {
         console.log(`Processing selections for ${containerId} on ${dateStr}`);
         let selectedHours = getSelectedHours(containerId);
+        console.log(`Selected hours in ${containerId}:`, selectedHours);
         adjustSelectionsForDayTransition(selectedHours, dateStr, containerId);
         updateContainerData(containerId, dateStr, selectedHours);
     }
     
     
     function getSelectedHours(containerId) {
-        let selectedHours = [];
-        $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).each(function() {
-            selectedHours.push(parseInt($(this).val().split(':')[0], 10));
-        });
+        let selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).map(function() {
+            return parseInt($(this).val().split(':')[0], 10);
+        }).get();
+        console.log(`Selected hours in ${containerId}:`, selectedHours);
         return selectedHours.sort((a, b) => a - b);
     }
 
     function adjustSelectionsForDayTransition(selectedHours, dateStr, containerId) {
+        console.log(`Adjusting day transition for ${containerId} with hours:`, selectedHours, `on date: ${dateStr}`);
+
         // Logic to add one hour before the first and after the last hour, considering day transition
         if (selectedHours.length > 0) {
             const firstHour = selectedHours[0];
@@ -112,6 +141,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
     
     function updateContainerData(containerId, dateStr, selectedHours) {
+        console.log(`Updating data for ${containerId} on ${dateStr} with selected hours:`, selectedHours);
         let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
         // Reset the date's data before updating
         dataToUpdate[dateStr] = [];
@@ -136,6 +166,8 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // This function encapsulates the logic for merging data and updating the input
     function mergeDataAndUpdateInput() {
+        console.log("Merging data from both containers");
+
         let mergedData = {};
     
         // Combine data from both containers
@@ -177,7 +209,16 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    $('.checkbox-container').on('change', '.checkbox-hour', function() {
+        const containerId = $(this).closest('.checkbox-container').data('id');
+        console.log(`Checkbox change detected in ${containerId}`);
+        const selectedDates = dateInput.selectedDates;
+        updateFirstDateInput(selectedDates, containerId);
+    });
+
 function updateFirstDateInput(selectedDates, containerId) {
+    console.log(`Updating first date input for ${containerId}`);
+
     let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
     const dateIndex = containerId === 'container1' ? 0 : 1;
     const selectedDate = selectedDates[dateIndex];
