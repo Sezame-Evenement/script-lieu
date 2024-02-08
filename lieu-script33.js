@@ -71,40 +71,35 @@ function updateFirstDateInput(selectedDates, containerId) {
     const dateIndex = containerId === 'container1' ? 0 : 1;
     const selectedDate = selectedDates[dateIndex];
     if (!selectedDate) return;
-  
+
     const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
-    const previouslySelectedHoursSet = new Set(dataToUpdate[formattedSelectedDate]?.map(range => parseInt(range.split('h')[0], 10)));
-    const currentlySelectedHoursSet = new Set();
-  
+    let allSelectedHours = [];
+
+    // Collect all currently selected hours
     $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).each(function () {
         const hour = parseInt($(this).val().split(':')[0], 10);
-        currentlySelectedHoursSet.add(hour);
+        allSelectedHours.push(hour);
     });
-  
-    // Determine newly selected and deselected hours
-    const newlySelectedHours = [...currentlySelectedHoursSet].filter(hour => !previouslySelectedHoursSet.has(hour));
-    const deselectedHours = [...previouslySelectedHoursSet].filter(hour => !currentlySelectedHoursSet.has(hour));
-  
-    // Add newly selected hours
-    newlySelectedHours.forEach(hour => {
+
+    // Sort to find the chronological first and last selections
+    allSelectedHours.sort((a, b) => a - b);
+    const firstHour = allSelectedHours[0];
+    const lastHour = allSelectedHours[allSelectedHours.length - 1];
+
+    // Clear previous data for the date to handle deselection
+    dataToUpdate[formattedSelectedDate] = [];
+
+    // Re-add the hours for current selections including adjustments
+    allSelectedHours.forEach(hour => {
         addTimeRange(hour, formattedSelectedDate, dataToUpdate);
     });
-  
-    // Remove deselected hours and handle transitional hours
-    deselectedHours.forEach(hour => {
-        removeTimeRange(hour, formattedSelectedDate, dataToUpdate);
-        // Check for transitional hours removal
-        if(hour === 0) {
-            // Attempt to remove 23h from the previous day
-            const previousDayStr = adjustDateStr(formattedSelectedDate, -1);
-            removeTimeRange(23, previousDayStr, dataToUpdate);
-        } else if(hour === 23) {
-            // Attempt to remove 0h from the next day
-            const nextDayStr = adjustDateStr(formattedSelectedDate, 1);
-            removeTimeRange(0, nextDayStr, dataToUpdate);
-        }
-    });
-  
+
+    // Add one hour before the first and after the last selection if there are selections
+    if (allSelectedHours.length > 0) {
+        addTimeRange(firstHour - 1, formattedSelectedDate, dataToUpdate);
+        addTimeRange(lastHour + 1, formattedSelectedDate, dataToUpdate);
+    }
+
     mergeDataAndUpdateInput();
 }
 
