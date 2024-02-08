@@ -177,7 +177,39 @@ document.addEventListener("DOMContentLoaded", function () {
             updateDateFullDisabled(selectedDates);
         }
     });
-    
+
+    function hourToRangeString(hour) {
+        let startHour = hour % 24;
+        let endHour = (hour + 1) % 24;
+        return `${startHour}h à ${endHour}h`;
+    }
+
+    function adjustDateStr(dateStr, dayOffset) {
+        let date = new Date(dateStr);
+        if (isNaN(date)) {
+            console.error("Invalid date provided to adjustDateStr:", dateStr);
+            return dateStr; // Return the original input to avoid further errors
+        }
+        date.setDate(date.getDate() + dayOffset);
+        return date.toISOString().split('T')[0];
+    }
+
+
+    function addTimeRange(hour, dateStr, data) {
+        let newDateStr = dateStr;
+        if (hour < 0) {
+            newDateStr = adjustDateStr(dateStr, -1); // Correctly adjust to the previous day
+            hour = 23;
+        } else if (hour > 23) {
+            newDateStr = adjustDateStr(dateStr, 1); // Correctly adjust to the next day
+            hour = 0;
+        }
+        const range = hourToRangeString(hour);
+        if (!data[newDateStr]) data[newDateStr] = [];
+        if (!data[newDateStr].includes(range)) {
+            data[newDateStr].push(range);
+        }
+    }
     // Additional helper functions like `hourToRangeString`, `adjustDateStr`, and `addTimeRange` need to be correctly defined
     // to support the logic in `updateContainerData` and other parts of the script.
     
