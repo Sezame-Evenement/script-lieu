@@ -94,6 +94,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
     
     
+    
     function getSelectedHours(containerId) {
         let selectedHours = [];
         $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).each(function() {
@@ -339,6 +340,12 @@ function removeTransitionalHours(dateStr, data) {
 
     function mergeDataAndUpdateInput() {
         let mergedData = {};
+        console.log('Merging data from both containers:', container1Data, container2Data);
+        console.log('Merged data before updating input:', mergedData);
+        $('.firstdateinput').val(JSON.stringify(mergedData));
+        console.log('Updated firstdateinput with merged data:', $('.firstdateinput').val());
+        // Update dateFullDisabledInput similarly and log its new value
+        console.log('Updated dateFullDisabledInput:', dateFullDisabledInput.value);
         const existingData = getExistingData();
         let allDates = new Set([...Object.keys(container1Data), ...Object.keys(container2Data), ...Object.keys(existingData)]);
 
