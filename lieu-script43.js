@@ -89,7 +89,9 @@ document.addEventListener("DOMContentLoaded", function () {
         let selectedHours = getSelectedHours(containerId);
         adjustSelectionsForDayTransition(selectedHours, dateStr, containerId);
         updateContainerData(containerId, dateStr, selectedHours);
+        console.log(`Updated data for ${containerId}:`, containerId === 'container1' ? container1Data : container2Data);
     }
+    
     
     
     function getSelectedHours(containerId) {
@@ -137,7 +139,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // This function encapsulates the logic for merging data and updating the input
     function mergeDataAndUpdateInput() {
         let mergedData = {};
-    
+        console.log('Merging data from both containers:', container1Data, container2Data);
+        console.log('Merged data:', mergedData);
         // Combine data from both containers
         Object.keys(container1Data).forEach(date => {
             mergedData[date] = [...(mergedData[date] || []), ...(container1Data[date] || [])];
@@ -237,7 +240,9 @@ function removeTransitionalHours(dateStr, data) {
     function updateDateFullDisabled() {
         if (!dateFullDisabledInput) {
             console.error('dateFullDisabledInput is not defined.');
+
             return;
+            
         }
     
         const updatedData = {};
