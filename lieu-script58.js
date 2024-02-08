@@ -220,29 +220,44 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     
 
-function updateFirstDateInput(selectedDates, containerId) {
-    console.log(`Updating first date input for ${containerId}: selectedDates =`, selectedDates);
+
+    function updateFirstDateInput(selectedDates, containerId) {
+        let dateIndex = containerId === 'container1' ? 0 : 1;
+        if (!selectedDates[dateIndex]) {
+            console.warn(`No selected date for ${containerId}.`);
+            return; // Exit if no date is selected for the current container
+        }
     
-    // Determine the correct index based on the container ID to handle selectedDates accordingly
-    let dateIndex = containerId === 'container1' ? 0 : (selectedDates.length > 1 ? 1 : 0);
-    if (selectedDates[dateIndex] === undefined) {
-        console.error(`No selected date for ${containerId}.`);
-        return; // Exit if no date is selected for the current container
-    }
-
-    let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
-    const selectedDate = selectedDates[dateIndex];
-    const formattedSelectedDate = formatDate(selectedDate); // Ensure this uses the correct format
-    console.log(`${containerId} selected date:`, formattedSelectedDate);
-
-    // Fetch all hours currently selected in the UI for this date.
-    const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
-        .map(function() { return parseInt($(this).val().split(':')[0], 10); })
-        .get()
-        .sort((a, b) => a - b);
-
-    // Re-add selected hours, adjusting for added hours before the first and after the last selection.
-    selectedHours.forEach(hour => addTimeRange(hour, formattedSelectedDate, dataToUpdate));
+        let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
+    
+        // Use the selected date directly from the flatpickr's selectedDates array
+        const selectedDate = selectedDates[dateIndex];
+    
+        // Convert selectedDate to an ISO format string or use a consistent format for keys
+        // Ensure month and day are zero-padded to two digits
+        let month = selectedDate.getMonth() + 1;
+        month = month < 10 ? '0' + month : month;
+        let day = selectedDate.getDate();
+        day = day < 10 ? '0' + day : day;
+        let key = `${selectedDate.getFullYear()}-${month}-${day}`;
+    
+        console.log(`${containerId} selected date key:`, key);
+    
+        // Fetch all hours currently selected in the UI for this date.
+        const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
+            .map(function() { return $(this).val(); }) // Use the value directly, assuming it's in a consistent format like 'HH:MM'
+            .get();
+    
+        // Ensure data structure for the date exists
+        if (!dataToUpdate[key]) dataToUpdate[key] = [];
+    
+        // Process the selected hours
+        selectedHours.forEach(hour => {
+            // Here you might need to adjust the logic to convert the hour into a range or format it as needed
+            if (!dataToUpdate[key].includes(hour)) {
+                dataToUpdate[key].push(hour);
+            }
+        });
 
     // Add one hour before the first and after the last selection, if there are any selections.
     if (selectedHours.length > 0) {
