@@ -66,40 +66,48 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    function updateFirstDateInput(selectedDates, containerId) {
-        let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
-        const dateIndex = containerId === 'container1' ? 0 : 1;
-        const selectedDate = selectedDates[dateIndex];
-        if (!selectedDate) return;
-    
-        const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
-        const previouslySelectedHoursSet = new Set(dataToUpdate[formattedSelectedDate]?.map(range => parseInt(range.split('h')[0], 10)));
-        const currentlySelectedHoursSet = new Set();
-    
-        $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).each(function () {
-            const hour = parseInt($(this).val().split(':')[0], 10);
-            currentlySelectedHoursSet.add(hour);
-        });
-    
-        // Determine newly selected and deselected hours
-        const newlySelectedHours = [...currentlySelectedHoursSet].filter(hour => !previouslySelectedHoursSet.has(hour));
-        const deselectedHours = [...previouslySelectedHoursSet].filter(hour => !currentlySelectedHoursSet.has(hour));
-    
-        // Add newly selected hours
-        newlySelectedHours.forEach(hour => {
-            addTimeRange(hour, formattedSelectedDate, dataToUpdate);
-        });
-    
-        // Remove deselected hours
-        deselectedHours.forEach(hour => {
-            removeTimeRange(hour, formattedSelectedDate, dataToUpdate);
-        });
-    
-        // Adjust for adding or removing hours before first and after last, if necessary
-        updateAdditionalHours(currentlySelectedHoursSet, formattedSelectedDate, dataToUpdate);
-    
-        mergeDataAndUpdateInput();
-    }
+function updateFirstDateInput(selectedDates, containerId) {
+    let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
+    const dateIndex = containerId === 'container1' ? 0 : 1;
+    const selectedDate = selectedDates[dateIndex];
+    if (!selectedDate) return;
+  
+    const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
+    const previouslySelectedHoursSet = new Set(dataToUpdate[formattedSelectedDate]?.map(range => parseInt(range.split('h')[0], 10)));
+    const currentlySelectedHoursSet = new Set();
+  
+    $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).each(function () {
+        const hour = parseInt($(this).val().split(':')[0], 10);
+        currentlySelectedHoursSet.add(hour);
+    });
+  
+    // Determine newly selected and deselected hours
+    const newlySelectedHours = [...currentlySelectedHoursSet].filter(hour => !previouslySelectedHoursSet.has(hour));
+    const deselectedHours = [...previouslySelectedHoursSet].filter(hour => !currentlySelectedHoursSet.has(hour));
+  
+    // Add newly selected hours
+    newlySelectedHours.forEach(hour => {
+        addTimeRange(hour, formattedSelectedDate, dataToUpdate);
+    });
+  
+    // Remove deselected hours and handle transitional hours
+    deselectedHours.forEach(hour => {
+        removeTimeRange(hour, formattedSelectedDate, dataToUpdate);
+        // Check for transitional hours removal
+        if(hour === 0) {
+            // Attempt to remove 23h from the previous day
+            const previousDayStr = adjustDateStr(formattedSelectedDate, -1);
+            removeTimeRange(23, previousDayStr, dataToUpdate);
+        } else if(hour === 23) {
+            // Attempt to remove 0h from the next day
+            const nextDayStr = adjustDateStr(formattedSelectedDate, 1);
+            removeTimeRange(0, nextDayStr, dataToUpdate);
+        }
+    });
+  
+    mergeDataAndUpdateInput();
+}
+
     
     function updateAdditionalHours(currentlySelectedHoursSet, dateStr, data) {
         if (currentlySelectedHoursSet.size > 0) {
