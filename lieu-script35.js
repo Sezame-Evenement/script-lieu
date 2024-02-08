@@ -39,8 +39,66 @@ document.addEventListener("DOMContentLoaded", function () {
     function resetSelections() {
         container1Data = {};
         container2Data = {};
+        processSelections(); // Process selections after resetting
     }
 
+    $('.moredays').on('click', function() {
+        secondContainerVisible = true;
+        const secondDate = new Date(initialSelectedDate);
+        secondDate.setDate(secondDate.getDate() + 1);
+        if (!$(".checkbox-container[data-id='container2']").html().trim()) {
+            $(".checkbox-container[data-id='container2']").html($(".checkbox-container[data-id='container1']").html());
+        }
+        $(".date-heading").eq(1).text(formatDate(secondDate));
+        $(".checkbox-container").eq(1).show();
+        $(".date-heading").eq(1).show();
+    });
+
+    function processSelections() {
+        let selections = {
+            [formatDate(initialSelectedDate)]: new Set(),
+            [formatDate(new Date(initialSelectedDate.getFullYear(), initialSelectedDate.getMonth(), initialSelectedDate.getDate() + 1))]: new Set()
+        };
+    
+        $(".checkbox-container[data-id='container1'] .checkbox-hour:checked").each(function() {
+            const hour = parseInt($(this).val().split(':')[0], 10);
+            selections[formatDate(initialSelectedDate)].add(hour);
+        });
+    
+        if (secondContainerVisible) {
+            $(".checkbox-container[data-id='container2'] .checkbox-hour:checked").each(function() {
+                const hour = parseInt($(this).val().split(':')[0], 10);
+                selections[formatDate(new Date(initialSelectedDate.getFullYear(), initialSelectedDate.getMonth(), initialSelectedDate.getDate() + 1))].add(hour);
+            });
+        }
+    
+        // Convert selections into a format suitable for dataToUpdate
+        for (let date in selections) {
+            if (!selections[date].size) continue; // Skip if no selections for the date
+            container1Data[date] = []; // Initialize container data for the date
+            selections[date].forEach(hour => {
+                container1Data[date].push(hourToRangeString(hour));
+                if (hour === 0) {
+                    // Add 23h to 0h for the previous day if not already present
+                    let previousDay = adjustDateStr(date, -1);
+                    container1Data[previousDay] = container1Data[previousDay] || [];
+                    if (!container1Data[previousDay].includes("23h à 0h")) {
+                        container1Data[previousDay].push("23h à 0h");
+                    }
+                } else if (hour === 23) {
+                    // Add 0h to 1h for the next day if not already present
+                    let nextDay = adjustDateStr(date, 1);
+                    container1Data[nextDay] = container1Data[nextDay] || [];
+                    if (!container1Data[nextDay].includes("0h à 1h")) {
+                        container1Data[nextDay].push("0h à 1h");
+                    }
+                }
+            });
+        }
+    
+        mergeDataAndUpdateInput(); // Reflect the updated selections in the input
+    }
+    
     const dateFullDisabledInput = document.querySelector('#datefulldisabled');
 
     document.addEventListener('change', function (event) {
@@ -307,3 +365,5 @@ function removeTransitionalHours(dateStr, data) {
         return date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     }
 });
+
+    
