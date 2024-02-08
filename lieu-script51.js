@@ -184,12 +184,8 @@ document.addEventListener("DOMContentLoaded", function () {
         return `${startHour}h à ${endHour}h`;
     }
 
-    function adjustDateStr(dateStr, dayOffset) {
-        let date = new Date(dateStr);
-        if (isNaN(date)) {
-            console.error("Invalid date provided to adjustDateStr:", dateStr);
-            return dateStr; // Return the original input to avoid further errors
-        }
+   function adjustDateStr(dateStr, dayOffset) {
+        const date = new Date(dateStr);
         date.setDate(date.getDate() + dayOffset);
         return date.toISOString().split('T')[0];
     }
