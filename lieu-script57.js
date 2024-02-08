@@ -218,6 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const selectedDates = dateInput.selectedDates;
         updateFirstDateInput(selectedDates, containerId);
     });
+    
 
 function updateFirstDateInput(selectedDates, containerId) {
     console.log(`Updating first date input for ${containerId}: selectedDates =`, selectedDates);
@@ -338,10 +339,16 @@ function removeTransitionalHours(dateStr, data) {
     }
 
     function adjustDateStr(dateStr, dayOffset) {
-        const date = new Date(dateStr);
+        console.log(`adjustDateStr input: ${dateStr}`);
+        let date = new Date(dateStr);
+        if (isNaN(date.getTime())) { // Check if date is invalid
+            console.error("Invalid date provided to adjustDateStr:", dateStr);
+            return null; // Or handle the error appropriately
+        }
         date.setDate(date.getDate() + dayOffset);
         return date.toISOString().split('T')[0];
     }
+    
     
     
     
