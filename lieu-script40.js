@@ -101,49 +101,54 @@ document.addEventListener("DOMContentLoaded", function () {
     
     function updateContainerData(containerId, dateStr, selectedHours) {
         let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
-        dataToUpdate[dateStr] = selectedHours.map(hour => hourToRangeString(hour));
-        // Additional logic for handling day transitions
+        // Reset the date's data before updating
+        dataToUpdate[dateStr] = [];
+        
+        // Update with new selections, mapping each hour to its range string
+        selectedHours.forEach(hour => {
+            let hourRange = hourToRangeString(hour);
+            if (!dataToUpdate[dateStr].includes(hourRange)) {
+                dataToUpdate[dateStr].push(hourRange);
+            }
+    
+            // Handle adding transitional hours for 0 and 23 hours
+            if (hour === 0) {
+                let previousDay = adjustDateStr(dateStr, -1);
+                addTimeRange(23, previousDay, containerId); // Adjust for the previous day
+            } else if (hour === 23) {
+                let nextDay = adjustDateStr(dateStr, 1);
+                addTimeRange(0, nextDay, containerId); // Adjust for the next day
+            }
+        });
     }
     
+    // This function encapsulates the logic for merging data and updating the input
+    function mergeDataAndUpdateInput() {
+        let mergedData = {};
     
-        // Convert selections into a format suitable for dataToUpdate
-        for (let date in selections) {
-            if (!selections[date].size) continue; // Skip if no selections for the date
-            container1Data[date] = []; // Initialize container data for the date
-            selections[date].forEach(hour => {
-                container1Data[date].push(hourToRangeString(hour));
-                if (hour === 0) {
-                    // Add 23h to 0h for the previous day if not already present
-                    let previousDay = adjustDateStr(date, -1);
-                    container1Data[previousDay] = container1Data[previousDay] || [];
-                    if (!container1Data[previousDay].includes("23h à 0h")) {
-                        container1Data[previousDay].push("23h à 0h");
-                    }
-                } else if (hour === 23) {
-                    // Add 0h to 1h for the next day if not already present
-                    let nextDay = adjustDateStr(date, 1);
-                    container1Data[nextDay] = container1Data[nextDay] || [];
-                    if (!container1Data[nextDay].includes("0h à 1h")) {
-                        container1Data[nextDay].push("0h à 1h");
-                    }
-                }
-            });
-        }
+        // Combine data from both containers
+        Object.keys(container1Data).forEach(date => {
+            mergedData[date] = [...(mergedData[date] || []), ...(container1Data[date] || [])];
+        });
+        Object.keys(container2Data).forEach(date => {
+            mergedData[date] = [...(mergedData[date] || []), ...(container2Data[date] || [])];
+        });
     
-        mergeDataAndUpdateInput(); // Reflect the updated selections in the input
+        // Convert mergedData to the correct format for firstdateinput
+        $('.firstdateinput').val(JSON.stringify(mergedData));
     }
     
-    const dateFullDisabledInput = document.querySelector('#datefulldisabled');
-
-    document.addEventListener('change', function (event) {
+    document.addEventListener('change', function(event) {
         if ($(event.target).closest('.checkbox-container').length) {
             const selectedDates = dateInput.selectedDates;
             updateFirstDateInput(selectedDates, $(event.target).closest('.checkbox-container').data('id'));
             updateDateFullDisabled(selectedDates);
         }
-        
     });
-
+    
+    // Additional helper functions like `hourToRangeString`, `adjustDateStr`, and `addTimeRange` need to be correctly defined
+    // to support the logic in `updateContainerData` and other parts of the script.
+    
     function handleTimeSlot(hour, formattedSelectedDate, dataToUpdate, selectedDate, currentlySelectedHours, previouslySelectedHours) {
         const isSelected = currentlySelectedHours.has(hour);
         const wasSelected = previouslySelectedHours.has(hour);
