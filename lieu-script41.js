@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
         }],
         onChange: function (selectedDates) {
+            console.log("Date selection changed", selectedDates);
             if (selectedDates.length > 0) {
                 initialSelectedDate = selectedDates[0];
                 $(".date-heading").eq(0).text(formatDate(selectedDates[0]));
@@ -45,6 +46,8 @@ document.addEventListener("DOMContentLoaded", function () {
     
     $('.moredays').click(function() {
         secondContainerVisible = !secondContainerVisible; // Toggle visibility
+        console.log("More days button clicked, second container visibility: ", secondContainerVisible);
+
         if (secondContainerVisible) {
             setupSecondContainer();
         } else {
@@ -60,10 +63,13 @@ document.addEventListener("DOMContentLoaded", function () {
         $(".checkbox-container[data-id='container2']").show();
         $(".date-heading").eq(1).show();
         updateCheckboxOptions([secondDate], "container2"); // Regenerate checkboxes for the second container
+        console.log("Setting up second container for next day");
+
     }
     
 
     function processSelections() {
+        console.log("Processing selections for both containers");
         processContainerSelections('container1', formatDate(initialSelectedDate));
         if (secondContainerVisible) {
             const nextDay = new Date(initialSelectedDate);
@@ -74,6 +80,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     
     function processContainerSelections(containerId, dateStr) {
+        console.log(`Processing selections for ${containerId} on ${dateStr}`);
         let selectedHours = getSelectedHours(containerId);
         adjustSelectionsForDayTransition(selectedHours, dateStr, containerId);
         updateContainerData(containerId, dateStr, selectedHours);
@@ -140,6 +147,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
     document.addEventListener('change', function(event) {
         if ($(event.target).closest('.checkbox-container').length) {
+            console.log("Change detected in container: ", $(event.target).closest('.checkbox-container').data('id'));
             const selectedDates = dateInput.selectedDates;
             updateFirstDateInput(selectedDates, $(event.target).closest('.checkbox-container').data('id'));
             updateDateFullDisabled(selectedDates);
