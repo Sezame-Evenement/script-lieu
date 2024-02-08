@@ -225,14 +225,8 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log(`Updating first date input for ${containerId}`);
     
         // Determine the correct date based on the container ID
-        let selectedDate = selectedDates[0]; // Default to the first selected date
-        if (containerId === 'container2' && selectedDates.length > 1) {
-            selectedDate = selectedDates[1]; // Use the second selected date if it exists
-        } else if (containerId === 'container2') {
-            // If there's no second date explicitly selected, calculate the next day for container2
-            selectedDate = new Date(selectedDate);
-            selectedDate.setDate(selectedDate.getDate() + 1);
-        }
+        let dateIndex = containerId === 'container1' ? 0 : (selectedDates.length > 1 ? 1 : 0);
+        let selectedDate = selectedDates[dateIndex];
     
         // Ensure the selectedDate is valid before proceeding
         if (!selectedDate || isNaN(selectedDate.getTime())) {
@@ -242,27 +236,22 @@ document.addEventListener("DOMContentLoaded", function () {
     
         let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
     
-        // Create a key for the date to use with dataToUpdate
-        let key = selectedDate.toISOString().split('T')[0]; // Format the date as YYYY-MM-DD
+        // Generate a key for the date in the format YYYY-MM-DD
+        let key = selectedDate.toISOString().split('T')[0];
     
         console.log(`${containerId} selected date key:`, key);
     
-        // Fetch all hours currently selected in the UI for this date.
+        // Fetch all hours currently selected in the UI for this date
         const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
             .map(function() { return $(this).val(); })
             .get();
     
-        // Update the data structure for this date
-        if (!dataToUpdate[key]) dataToUpdate[key] = [];
-        selectedHours.forEach(hour => {
-            if (!dataToUpdate[key].includes(hour)) {
-                dataToUpdate[key].push(hour);
-            }
-        });
+        // Update or initialize the array for this date in the data structure
+        if (!dataToUpdate[key]) {
+            dataToUpdate[key] = [];
+        }
     
-        // Process the selected hours
         selectedHours.forEach(hour => {
-            // Here you might need to adjust the logic to convert the hour into a range or format it as needed
             if (!dataToUpdate[key].includes(hour)) {
                 dataToUpdate[key].push(hour);
             }
