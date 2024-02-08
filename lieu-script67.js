@@ -237,20 +237,44 @@ document.addEventListener("DOMContentLoaded", function () {
         
         const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
             .map(function() {
-                let hour = parseInt($(this).val().split(':')[0], 10);
-                return hourToRangeString(hour);
+                return parseInt($(this).val().split(':')[0], 10);
             })
             .get()
-            .sort((a, b) => parseInt(a) - parseInt(b)); // Ensure sorting is based on hour value
+            .sort((a, b) => a - b);
         
-        // Directly update with selected hours
-        selectedHours.forEach(hourRange => {
+        // Check and add one hour before the first and one hour after the last hour
+        if (selectedHours.length > 0) {
+            const firstHour = selectedHours[0];
+            const lastHour = selectedHours[selectedHours.length - 1];
+            
+            // Adjust for day transition if the first hour is 0
+            if (firstHour === 0) {
+                let prevDayKey = adjustDateStr(key, -1);
+                dataToUpdate[prevDayKey] = dataToUpdate[prevDayKey] || [];
+                dataToUpdate[prevDayKey].push("23h à 0h");
+            } else {
+                let hourBeforeFirst = firstHour - 1;
+                dataToUpdate[key].push(hourToRangeString(hourBeforeFirst));
+            }
+            
+            // Adjust for day transition if the last hour is 23
+            if (lastHour === 23) {
+                let nextDayKey = adjustDateStr(key, 1);
+                dataToUpdate[nextDayKey] = dataToUpdate[nextDayKey] || [];
+                dataToUpdate[nextDayKey].push("0h à 1h");
+            } else {
+                let hourAfterLast = lastHour + 1;
+                dataToUpdate[key].push(hourToRangeString(hourAfterLast));
+            }
+        }
+        
+        // Ensure selected hours are also added
+        selectedHours.forEach(hour => {
+            let hourRange = hourToRangeString(hour);
             if (!dataToUpdate[key].includes(hourRange)) {
                 dataToUpdate[key].push(hourRange);
             }
         });
-    
-        // Ensure adding one hour before and after selected hours is handled outside this forEach loop to prevent duplicate additions
     
         console.log(`Data to update after handling ${containerId}:`, dataToUpdate);
     
@@ -300,9 +324,10 @@ function removeTransitionalHours(dateStr, data) {
     }
     
     function hourToRangeString(hour) {
-        let startHour = hour % 24;
+        // Adjust for 24-hour wrap-around
+        let startHour = hour;
         let endHour = (hour + 1) % 24;
-        return `${startHour}h à ${endHour}h`;
+        return `${startHour.toString().padStart(2, '0')}h à ${endHour.toString().padStart(2, '0')}h`;
     }
     
     function updateHourSelection(data, dateStr, add = true) {
@@ -342,11 +367,10 @@ function removeTransitionalHours(dateStr, data) {
         data[newDateStr] = (data[newDateStr] || []).filter(range => range !== rangeToRemove);
     }
 
-    function adjustDateStr(dateStr, dayOffset) {
-        const dateParts = dateStr.split('-');
-        const date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-        date.setDate(date.getDate() + dayOffset);
-        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+    function adjustDateStr(dateStr, days) {
+        let parts = dateStr.split('-');
+        let adjustedDate = new Date(parts[0], parts[1] - 1, parseInt(parts[2]) + days);
+        return `${adjustedDate.getFullYear()}-${(adjustedDate.getMonth() + 1).toString().padStart(2, '0')}-${adjustedDate.getDate().toString().padStart(2, '0')}`;
     }
     
     
