@@ -1,22 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-    
-    $('.moredays').click(function() {
-        secondContainerVisible = !secondContainerVisible;
-        if (secondContainerVisible) {
-            $(".checkbox-container[data-id='container2']").show();
-            $(".date-heading").eq(1).show();
-            // Further logic to update the heading and checkboxes for the second container
-        } else {
-            $(".checkbox-container[data-id='container2']").hide();
-            $(".date-heading").eq(1).hide();
-        }
-    });
-
-    // Add event listeners for checkboxes in both containers
-    $('.checkbox-container').on('change', '.checkbox-hour', function() {
-        const containerId = $(this).closest('.checkbox-container').data('id');
-        // Logic to process checkbox selections based on the container
-    });
     let container1Data = {};
     let container2Data = {};
     let initialSelectedDate, secondContainerVisible = false;
@@ -67,7 +49,24 @@ document.addEventListener("DOMContentLoaded", function () {
         processSelections();
     }
     
-   
+    $('.moredays').click(function() {
+        secondContainerVisible = !secondContainerVisible;
+        if (secondContainerVisible) {
+            $(".checkbox-container[data-id='container2']").show();
+            $(".date-heading").eq(1).show();
+            // Further logic to update the heading and checkboxes for the second container
+        } else {
+            $(".checkbox-container[data-id='container2']").hide();
+            $(".date-heading").eq(1).hide();
+        }
+    });
+
+    // Add event listeners for checkboxes in both containers
+    $('.checkbox-container').on('change', '.checkbox-hour', function() {
+        const containerId = $(this).closest('.checkbox-container').data('id');
+        // Logic to process checkbox selections based on the container
+    });
+
     
     function setupSecondContainer() {
         const secondDate = new Date(initialSelectedDate);
