@@ -3,6 +3,9 @@ document.addEventListener("DOMContentLoaded", function () {
     let container2Data = {};
     let initialSelectedDate, secondContainerVisible = false;
 
+    const dateFullDisabledInput = document.querySelector('#datefulldisabled');
+
+
     // Initialize flatpickr for date selection
     const today = new Date(), tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
