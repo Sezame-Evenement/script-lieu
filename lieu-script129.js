@@ -380,6 +380,10 @@ function removeTransitionalHours(dateStr, data) {
         const existingData = getExistingData();
         let allDates = new Set([...Object.keys(container1Data), ...Object.keys(container2Data), ...Object.keys(existingData)]);
 
+        console.log("Container 1 data:", container1Data);
+        console.log("Container 2 data:", container2Data);
+    
+
         allDates.forEach(date => {
             let dataFromContainer1 = container1Data[date] || [];
             let dataFromContainer2 = container2Data[date] || [];
