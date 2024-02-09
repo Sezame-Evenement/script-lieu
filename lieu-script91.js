@@ -114,21 +114,29 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     
     function processContainerSelections(containerId, dateStr) {
-        console.log(`Processing selections for ${containerId} on ${dateStr}`);
-        let selectedHours = getSelectedHours(containerId);
-        console.log(`Selected hours in ${containerId}:`, selectedHours);
-        adjustSelectionsForDayTransition(selectedHours, dateStr, containerId);
-        updateContainerData(containerId, dateStr, selectedHours);
+        let selectedHours = getSelectedHours(containerId); // Ensure this returns a valid list of integers
+        
+        selectedHours.forEach(hour => {
+            // Convert each hour to a range string before adding to data
+            let hourRange = hourToRangeString(hour); // Make sure hour is valid and gets correctly converted
+            if (hourRange !== "Invalid hour") { // Check if hourRange is valid
+                updateContainerData(containerId, dateStr, hourRange); // Update data with the formatted hour range
+            } else {
+                console.error("Invalid hour encountered:", hour);
+            }
+        });
+    
+        // Optionally, process any additional logic needed after updating container data
     }
+    
     
     
     function getSelectedHours(containerId) {
-        let selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).map(function() {
-            return parseInt($(this).val().split(':')[0], 10);
-        }).get();
-        console.log(`Selected hours in ${containerId}:`, selectedHours);
-        return selectedHours.sort((a, b) => a - b);
+        return $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).map(function() {
+            return parseInt($(this).val().split(':')[0], 10); // Safely parse hour as integer
+        }).get().filter(hour => !isNaN(hour)); // Filter out any NaN values
     }
+    
 
     function adjustSelectionsForDayTransition(selectedHours, dateStr, containerId) {
         console.log(`Adjusting day transition for ${containerId} with hours:`, selectedHours, `on date: ${dateStr}`);
@@ -318,31 +326,51 @@ function removeTransitionalHours(dateStr, data) {
     }
     
     function hourToRangeString(hour) {
+        if (isNaN(hour) || hour < 0 || hour > 23) {
+            console.error("Invalid hour input for hourToRangeString:", hour);
+            return "Invalid hour"; // or any other error handling
+        }
         let startHour = hour % 24;
-        let endHour = (hour + 1) % 24;
+        let endHour = (startHour + 1) % 24;
         return `${startHour}h à ${endHour}h`;
     }
+    
     
     function updateHourSelection(data, dateStr, add = true) {
         // This function's usage has been streamlined in updateFirstDateInput
     }
     
     function addTimeRange(hour, dateStr, data) {
+        let adjustedHour = hour;
         let newDateStr = dateStr;
-        // Adjust date if the hour requires transitioning to the previous or next day
+    
+        // Adjust for hour transitions to the previous or next day
         if (hour < 0) {
-            newDateStr = adjustDateStr(dateStr, -1); // Previous day
-            hour = 23;
+            adjustedHour = 23; // Set to last hour of previous day
+            newDateStr = adjustDateStr(dateStr, -1); // Adjust to previous day
         } else if (hour > 23) {
-            newDateStr = adjustDateStr(dateStr, 1); // Next day
-            hour = 0;
+            adjustedHour = 0; // Set to first hour of next day
+            newDateStr = adjustDateStr(dateStr, 1); // Adjust to next day
         }
-        const range = hourToRangeString(hour); // Ensure correct formatting
-        if (!data[newDateStr]) data[newDateStr] = [];
+    
+        // Format the hour to the expected range string
+        let range = hourToRangeString(adjustedHour);
+        if (range === "Invalid hour") {
+            console.error("Invalid hour for range:", adjustedHour);
+            return; // Exit if the range is invalid
+        }
+    
+        // Ensure there's a list to add to for the given date
+        if (!data[newDateStr]) {
+            data[newDateStr] = [];
+        }
+    
+        // Add the range if it's not already included
         if (!data[newDateStr].includes(range)) {
             data[newDateStr].push(range);
         }
     }
+    
     
     
     function removeTimeRange(hour, dateStr, data) {
