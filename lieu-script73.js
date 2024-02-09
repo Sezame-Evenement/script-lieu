@@ -157,12 +157,12 @@ document.addEventListener("DOMContentLoaded", function () {
         dateFullDisabledInput.value = JSON.stringify(mergedData); // Update dateFullDisabledInput similarly
     }
     
-    // Example helper function to adjust the date for container 2 data
-    function adjustDateForContainer2(date) {
-        // Assuming 'date' is already in 'YYYY-MM-DD' format
-        let dateObj = new Date(date);
-        dateObj.setDate(dateObj.getDate() + 1); // Adjusting date for container 2
-        return dateObj.toISOString().split('T')[0];
+    function adjustDateForContainer2(selectedDate) {
+        // If container 2 is meant for the next day, adjust the date accordingly
+        if (!selectedDate) return null;
+        const nextDay = new Date(selectedDate);
+        nextDay.setDate(selectedDate.getDate() + 1); // Adjust to the next day for container 2
+        return `${nextDay.getFullYear()}-${(nextDay.getMonth() + 1).toString().padStart(2, '0')}-${nextDay.getDate().toString().padStart(2, '0')}`;
     }
     
     document.addEventListener('change', function(event) {
@@ -192,40 +192,40 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-function updateFirstDateInput(selectedDates, containerId) {
-    let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
-    const dateIndex = containerId === 'container1' ? 0 : 1;
-    const selectedDate = selectedDates[dateIndex];
-    if (!selectedDate) return;
-
-    const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
-    let currentSelections = dataToUpdate[formattedSelectedDate] || [];
-
-    // Clear selections for the date to handle deselection.
-    dataToUpdate[formattedSelectedDate] = [];
-
-    // Fetch all hours currently selected in the UI for this date.
-    const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
-        .map(function() { return parseInt($(this).val().split(':')[0], 10); })
-        .get()
-        .sort((a, b) => a - b);
-
-    // Re-add selected hours, adjusting for added hours before the first and after the last selection.
-    selectedHours.forEach(hour => addTimeRange(hour, formattedSelectedDate, dataToUpdate));
-
-    // Add one hour before the first and after the last selection, if there are any selections.
-    if (selectedHours.length > 0) {
-        const firstHour = selectedHours[0];
-        const lastHour = selectedHours[selectedHours.length - 1];
-        addTimeRange(firstHour - 1, formattedSelectedDate, dataToUpdate);
-        addTimeRange(lastHour + 1, formattedSelectedDate, dataToUpdate);
-    } else {
-        // If no hours are currently selected, ensure transitional hours are removed.
-        removeTransitionalHours(formattedSelectedDate, dataToUpdate);
+    function updateFirstDateInput(selectedDates, containerId) {
+        console.log(`Updating for ${containerId}`);
+    
+        // Determine the correct date index based on the container ID
+        let dateIndex = containerId === 'container1' ? 0 : (selectedDates.length > 1 ? 1 : 0);
+        let selectedDate = selectedDates[dateIndex];
+        if (!selectedDate) {
+            console.error(`No selected date for ${containerId}`);
+            return;
+        }
+    
+        // Format the selected date into a key for data storage
+        let key = `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
+        console.log(`${containerId} selected date key: ${key}`);
+    
+        let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
+    
+        // Fetch selected hours from UI
+        const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
+            .map(function() {
+                let hourValue = $(this).val(); // Assuming value is in 'HH:mm' format
+                return hourValue; // Modify this as necessary based on actual value format
+            }).get();
+    
+        // Update data structure
+        if (!dataToUpdate[key]) dataToUpdate[key] = [];
+        selectedHours.forEach(hour => {
+            if (!dataToUpdate[key].includes(hour)) dataToUpdate[key].push(hour);
+        });
+    
+        console.log(`Updated data for ${containerId}:`, dataToUpdate[key]);
+    
+        mergeDataAndUpdateInput(); // Make sure to merge and update inputs
     }
-
-    mergeDataAndUpdateInput();
-}
 
 function removeTransitionalHours(dateStr, data) {
     // Remove 23h from the previous day and 0h from the next day if they exist as orphaned entries.
