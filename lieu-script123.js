@@ -206,6 +206,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
         let currentSelections = dataToUpdate[formattedSelectedDate] || [];
     
+        console.log(`Updating first date input for ${containerId}, selected date: ${formattedSelectedDate}`);
+        
         // Clear selections for the date to handle deselection.
         dataToUpdate[formattedSelectedDate] = [];
     
@@ -214,6 +216,8 @@ document.addEventListener("DOMContentLoaded", function () {
             .map(function() { return parseInt($(this).val().split(':')[0], 10); })
             .get()
             .sort((a, b) => a - b);
+    
+        console.log(`Selected hours in ${containerId}:`, selectedHours);
     
         // Re-add selected hours, adjusting for added hours before the first and after the last selection.
         selectedHours.forEach(hour => addTimeRange(hour, formattedSelectedDate, dataToUpdate));
@@ -231,6 +235,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
         mergeDataAndUpdateInput();
     }
+    
     
 
 function removeTransitionalHours(dateStr, data) {
