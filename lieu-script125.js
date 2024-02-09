@@ -85,8 +85,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     
     function processContainerSelections(containerId, dateStr) {
-        console.log(`Processing selections for ${containerId} on ${dateStr}`);
         let selectedHours = getSelectedHours(containerId);
+        console.log(`Processing selections for ${containerId} on ${dateStr}: Selected hours:`, selectedHours);
+
         adjustSelectionsForDayTransition(selectedHours, dateStr, containerId);
         updateContainerData(containerId, dateStr, selectedHours);
     }
@@ -97,6 +98,8 @@ document.addEventListener("DOMContentLoaded", function () {
         $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).each(function() {
             selectedHours.push(parseInt($(this).val().split(':')[0], 10));
         });
+        console.log(`Selected hours in ${containerId}:`, selectedHours);
+
         return selectedHours.sort((a, b) => a - b);
     }
 
@@ -148,14 +151,30 @@ document.addEventListener("DOMContentLoaded", function () {
     
         // Convert mergedData to the correct format for firstdateinput
         $('.firstdateinput').val(JSON.stringify(mergedData));
+        console.log("Merged data for firstdateinput:", $('.firstdateinput').val());
+        console.log("Updated dateFullDisabledInput value:", $('#datefulldisabled').val());
     }
     
     document.addEventListener('change', function(event) {
         if ($(event.target).closest('.checkbox-container').length) {
+            const selectedDates = dateInput.selectedDates;
             const containerId = $(event.target).closest('.checkbox-container').data('id');
             console.log(`Checkbox change detected in ${containerId}`);
-            const selectedDates = dateInput.selectedDates;
+            
+            // Retrieve the date for the first container
+            const firstContainerDate = selectedDates[0];
+            
+            // Calculate the date for the second container (next day)
+            const secondContainerDate = new Date(firstContainerDate);
+            secondContainerDate.setDate(secondContainerDate.getDate() + 1);
+    
+            console.log("First container date:", formatDate(firstContainerDate));
+            console.log("Second container date:", formatDate(secondContainerDate));
+            
+            // Update the input for the first container
             updateFirstDateInput(selectedDates, containerId);
+            
+            // Update the disabled dates input
             updateDateFullDisabled(selectedDates);
         }
     });
@@ -183,22 +202,26 @@ document.addEventListener("DOMContentLoaded", function () {
         const dateIndex = containerId === 'container1' ? 0 : 1;
         const selectedDate = selectedDates[dateIndex];
         if (!selectedDate) return;
-
+    
         const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
         let currentSelections = dataToUpdate[formattedSelectedDate] || [];
-
+    
+        console.log(`Updating first date input for ${containerId}, selected date: ${formattedSelectedDate}`);
+        
         // Clear selections for the date to handle deselection.
         dataToUpdate[formattedSelectedDate] = [];
-
+    
         // Fetch all hours currently selected in the UI for this date.
         const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
             .map(function() { return parseInt($(this).val().split(':')[0], 10); })
             .get()
             .sort((a, b) => a - b);
-
+    
+        console.log(`Selected hours in ${containerId}:`, selectedHours);
+    
         // Re-add selected hours, adjusting for added hours before the first and after the last selection.
         selectedHours.forEach(hour => addTimeRange(hour, formattedSelectedDate, dataToUpdate));
-
+    
         // Add one hour before the first and after the last selection, if there are any selections.
         if (selectedHours.length > 0) {
             const firstHour = selectedHours[0];
@@ -209,36 +232,40 @@ document.addEventListener("DOMContentLoaded", function () {
             // If no hours are currently selected, ensure transitional hours are removed.
             removeTransitionalHours(formattedSelectedDate, dataToUpdate);
         }
-
+    
         mergeDataAndUpdateInput();
     }
+    
+    
 
-    function removeTransitionalHours(dateStr, data) {
-        // Remove 23h from the previous day and 0h from the next day if they exist as orphaned entries.
-        const previousDayStr = adjustDateStr(dateStr, -1);
-        const nextDayStr = adjustDateStr(dateStr, 1);
-        removeTimeRange(23, previousDayStr, data, true); // Force removal without checking
-        removeTimeRange(0, nextDayStr, data, true); // Force removal without checking
-    }
+function removeTransitionalHours(dateStr, data) {
+    // Remove 23h from the previous day and 0h from the next day if they exist as orphaned entries.
+    const previousDayStr = adjustDateStr(dateStr, -1);
+    const nextDayStr = adjustDateStr(dateStr, 1);
+    removeTimeRange(23, previousDayStr, data, true); // Force removal without checking
+    removeTimeRange(0, nextDayStr, data, true); // Force removal without checking
+}
 
+    
     function updateAdditionalHours(currentlySelectedHoursSet, dateStr, data) {
         if (currentlySelectedHoursSet.size > 0) {
             const sortedHours = [...currentlySelectedHoursSet].sort((a, b) => a - b);
             const firstHour = sortedHours[0];
             const lastHour = sortedHours[sortedHours.length - 1];
-
+    
             // Correctly adjust to add or remove additional hours based on the current selection
             addTimeRange(firstHour - 1, dateStr, data);
             addTimeRange(lastHour + 1, dateStr, data);
         }
     }
-
+    
+    
     function updateDateFullDisabled() {
         if (!dateFullDisabledInput) {
             console.error('dateFullDisabledInput is not defined.');
             return;
         }
-
+    
         const updatedData = {};
         Object.keys(container1Data).concat(Object.keys(container2Data)).forEach(date => {
             const hours = [...(container1Data[date] || []), ...(container2Data[date] || [])];
@@ -246,21 +273,21 @@ document.addEventListener("DOMContentLoaded", function () {
                 updatedData[date] = hours;
             }
         });
-
+    
         dateFullDisabledInput.value = JSON.stringify(updatedData);
         console.log("Updated dateFullDisabledInput:", dateFullDisabledInput.value);
     }
-
+    
     function hourToRangeString(hour) {
         let startHour = hour % 24;
         let endHour = (hour + 1) % 24;
         return `${startHour}h à ${endHour}h`;
     }
-
+    
     function updateHourSelection(data, dateStr, add = true) {
         // This function's usage has been streamlined in updateFirstDateInput
     }
-
+    
     function addTimeRange(hour, dateStr, data) {
         let newDateStr = dateStr;
         if (hour < 0) {
@@ -275,9 +302,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!data[newDateStr].includes(range)) {
             data[newDateStr].push(range);
         }
-        console.log(`Added hour range ${range} on ${newDateStr} for ${data === container1Data ? 'container1' : 'container2'}`);
     }
-
+    
     function removeTimeRange(hour, dateStr, data) {
         let newDateStr = dateStr;
         if (hour < 0) {
@@ -289,7 +315,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         const rangeToRemove = hourToRangeString(hour);
         data[newDateStr] = (data[newDateStr] || []).filter(range => range !== rangeToRemove);
-        console.log(`Removed hour range ${rangeToRemove} on ${newDateStr} for ${data === container1Data ? 'container1' : 'container2'}`);
     }
 
     function adjustDateStr(dateStr, dayOffset) {
@@ -297,52 +322,121 @@ document.addEventListener("DOMContentLoaded", function () {
         date.setDate(date.getDate() + dayOffset);
         return date.toISOString().split('T')[0];
     }
+    
+    
+    
+    
+    function adjustDateForHour(hour, date) {
+        if (hour < 0) {
+            hour = 23;
+            date.setDate(date.getDate() - 1);
+        } else if (hour > 23) {
+            hour = 0;
+            date.setDate(date.getDate() + 1);
+        }
+        return date;
+    }
+    
 
-    function updateCheckboxOptions(selectedDates, containerId) {
-        const openingHourStr = $('#ouverture-lieu').text();
-        const openingHour = parseInt(openingHourStr.split(/[:h]/)[0]);
-        const closingHourStr = $('#fermeture-lieu').text();
-        const closingHour = parseInt(closingHourStr.split(/[:h]/)[0]);
-        const disabledHoursElement = document.querySelector('.paragraph-dhours');
-        const disabledHoursText = disabledHoursElement.textContent.trim();
-        const disabledHours = parseJson(disabledHoursText) || {};
-        const checkboxContainer = $(`.checkbox-container[data-id="${containerId}"]`);
-        checkboxContainer.empty();
-        const upperLimitHour = (containerId === 'container2') ? closingHour : 23;
-        for (let i = openingHour; i <= upperLimitHour; i++) {
-            if (!selectedDates.length || isHourAvailable(i, selectedDates, disabledHours)) {
-                const checkboxId = `checkbox-${containerId}-${i}`;
-                const label = document.createElement('label');
-                label.setAttribute('for', checkboxId);
-                label.textContent = `${i}h`;
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.id = checkboxId;
-                checkbox.value = `${i}:00`;
-                checkbox.classList.add('checkbox-hour');
-                label.appendChild(checkbox);
-                checkboxContainer.append(label);
+
+    function removeRangeFromData(hour, date, data) {
+        const targetFormattedDate = date.toLocaleDateString('fr-CA');
+        const endHour = (hour + 1) % 24;
+        const range = `${hour}h à ${endHour}h`;
+
+        if (data[targetFormattedDate]) {
+            const index = data[targetFormattedDate].indexOf(range);
+            if (index !== -1) {
+                data[targetFormattedDate].splice(index, 1);
             }
         }
-    }
 
-    function isHourAvailable(hour, selectedDates, disabledHours) {
-        const formattedDate = selectedDates[0].toISOString().split('T')[0];
-        const disabledTimes = disabledHours[formattedDate];
-        return !(disabledTimes && disabledTimes.includes(hour));
-    }
-
-    function formatDate(date) {
-        return date.toLocaleDateString('fr-CA');
-    }
-
-    function parseJson(text) {
-        try {
-            return JSON.parse(text);
-        } catch (e) {
-            console.error('Error parsing JSON:', e);
-            return null;
+        if (hour === 0) {
+            removeRangeFromData(23, adjustDateForHour(-1, new Date(date)), data);
+        } else if (hour === 23) {
+            removeRangeFromData(0, adjustDateForHour(24, new Date(date)), data);
         }
     }
 
-});
+    function mergeDataAndUpdateInput() {
+        let mergedData = {};
+        const existingData = getExistingData();
+        let allDates = new Set([...Object.keys(container1Data), ...Object.keys(container2Data), ...Object.keys(existingData)]);
+
+        allDates.forEach(date => {
+            let dataFromContainer1 = container1Data[date] || [];
+            let dataFromContainer2 = container2Data[date] || [];
+            let existingDataForDate = existingData[date] || [];
+
+            mergedData[date] = [...new Set([...dataFromContainer1, ...dataFromContainer2, ...existingDataForDate])];
+        });
+
+        for (let date in mergedData) {
+            if (mergedData[date].length === 0) {
+                delete mergedData[date];
+            }
+        }
+
+    $('.firstdateinput').val(JSON.stringify(mergedData));
+    }
+
+    function getExistingData() {
+        const existingDataElement = document.querySelector('.paragraph-dhours');
+        return existingDataElement ? parseJson(existingDataElement.textContent.trim()) : {};    }
+
+        function parseJson(jsonString) {
+            try { return JSON.parse(jsonString); }
+            catch (error) { console.error("Error parsing JSON:", error); return null; }
+        }
+    
+        function updateCheckboxOptions(selectedDates, containerId) {
+            console.log(`Updating checkbox options for ${containerId} with selected dates:`, selectedDates.map(date => formatDate(date)));
+        
+            const openingHourStr = $('#ouverture-lieu').text();
+            const openingHour = parseInt(openingHourStr.split(/[:h]/)[0]);
+            const closingHourStr = $('#fermeture-lieu').text();
+            const closingHour = parseInt(closingHourStr.split(/[:h]/)[0]);
+            const disabledHoursElement = document.querySelector('.paragraph-dhours');
+            const disabledHoursText = disabledHoursElement.textContent.trim();
+            const disabledHours = parseJson(disabledHoursText) || {};
+            const checkboxContainer = $(`.checkbox-container[data-id="${containerId}"]`);
+            checkboxContainer.empty();
+            const upperLimitHour = (containerId === 'container2') ? closingHour : 24;
+            for (let hour = 0; hour < upperLimitHour; hour++) {
+                const isWithinRange = (closingHour > openingHour) ? (hour >= openingHour && hour < closingHour) : (hour >= openingHour || hour < closingHour);
+                if (isWithinRange) {
+                    const isDisabled = selectedDates.some(selectedDate => {
+                        const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
+                        return (disabledHours[formattedSelectedDate] || [])
+                            .some(disabledHour => {
+                                const [start, end] = disabledHour.split(' à ');
+                                const [startHour] = start.split('h');
+                                const [endHour] = end.split('h');
+                                const selectedHour = parseInt(hour);
+                                return (startHour === '23' && endHour === '0' && (selectedHour === 23 || selectedHour === 0)) || (startHour !== '23' && selectedHour >= parseInt(startHour) && selectedHour < parseInt(endHour));
+                            });
+                    });
+                    const formattedHour = `${hour.toString().padStart(2, '0')}h00 à ${((hour + 1) % 24).toString().padStart(2, '0')}h00`;
+                    const checkboxDiv = $("<div>", { class: "checkbox-item" });
+                    const label = $("<label>", { text: formattedHour, for: `checkbox-${containerId}-${hour}`, style: isDisabled ? "color: #777; text-decoration: line-through; cursor: not-allowed;" : "" });
+                    const checkbox = $("<input>", { type: "checkbox", value: `${hour}:00`, id: `checkbox-${containerId}-${hour}`, class: "checkbox-hour", disabled: isDisabled, name: `checkbox-${containerId}` });
+                    // Log the value of the checkbox
+                    console.log(`Checkbox value for ${containerId}: ${hour}:00 - ${((hour + 1) % 24)}:00`);
+                    checkboxDiv.append(label);
+                    checkboxDiv.append(checkbox);
+                    checkboxContainer.append(checkboxDiv);
+                }
+            }
+        }
+        
+    
+        function updateMoreDaysButton(selectedDates) {
+            const moreDaysButton = $(".moredays");
+            moreDaysButton.prop('disabled', selectedDates.length > 0 && (selectedDates[0].getDate() === tomorrow.getDate() || selectedDates.length > 1));
+        }
+    
+        function formatDate(date) {
+            return date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        
+    });
