@@ -465,29 +465,21 @@ function removeTransitionalHours(dateStr, data) {
 
     function mergeDataAndUpdateInput() {
         let mergedData = {};
-        const existingData = getExistingData();
-        let allDates = new Set([...Object.keys(container1Data), ...Object.keys(container2Data), ...Object.keys(existingData)]);
-
-        console.log("Container 1 data:", container1Data);
-        console.log("Container 2 data:", container2Data);
+        // Ensure all dates from both containers are considered
+        let allDates = new Set([...Object.keys(container1Data), ...Object.keys(container2Data)]);
     
-
         allDates.forEach(date => {
-            let dataFromContainer1 = container1Data[date] || [];
-            let dataFromContainer2 = container2Data[date] || [];
-            let existingDataForDate = existingData[date] || [];
-
-            mergedData[date] = [...new Set([...dataFromContainer1, ...dataFromContainer2, ...existingDataForDate])];
+            // Combine and deduplicate times for each date from both containers
+            let times = [...(container1Data[date] || []), ...(container2Data[date] || [])];
+            mergedData[date] = [...new Set(times)];
         });
-
-        for (let date in mergedData) {
-            if (mergedData[date].length === 0) {
-                delete mergedData[date];
-            }
-        }
-
-    $('.firstdateinput').val(JSON.stringify(mergedData));
+    
+        // Update the inputs with the merged data
+        $('.firstdateinput').val(JSON.stringify(mergedData));
+        $('#datefulldisabled').val(JSON.stringify(mergedData));
+        console.log("Merged data for inputs:", mergedData);
     }
+    
 
     function getExistingData() {
         const existingDataElement = document.querySelector('.paragraph-dhours');
