@@ -252,10 +252,13 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     
         selectedHours.forEach(hour => {
-            if (!dataToUpdate[key].includes(hour)) {
-                dataToUpdate[key].push(hour);
+            // Assuming hour is already an integer
+            let formattedRange = hourToRangeString(hour); // Format to "HHh à HHh"
+            if (!dataToUpdate[key].includes(formattedRange)) {
+                dataToUpdate[key].push(formattedRange);
             }
         });
+        
 
     // Add one hour before the first and after the last selection, if there are any selections.
     if (selectedHours.length > 0) {
@@ -326,19 +329,21 @@ function removeTransitionalHours(dateStr, data) {
     
     function addTimeRange(hour, dateStr, data) {
         let newDateStr = dateStr;
+        // Adjust date if the hour requires transitioning to the previous or next day
         if (hour < 0) {
-            newDateStr = adjustDateStr(dateStr, -1); // Correctly adjust to the previous day
+            newDateStr = adjustDateStr(dateStr, -1); // Previous day
             hour = 23;
         } else if (hour > 23) {
-            newDateStr = adjustDateStr(dateStr, 1); // Correctly adjust to the next day
+            newDateStr = adjustDateStr(dateStr, 1); // Next day
             hour = 0;
         }
-        const range = hourToRangeString(hour);
+        const range = hourToRangeString(hour); // Ensure correct formatting
         if (!data[newDateStr]) data[newDateStr] = [];
         if (!data[newDateStr].includes(range)) {
             data[newDateStr].push(range);
         }
     }
+    
     
     function removeTimeRange(hour, dateStr, data) {
         let newDateStr = dateStr;
