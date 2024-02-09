@@ -273,22 +273,22 @@ function removeTransitionalHours(dateStr, data) {
     }
     
     function addTimeRange(hour, dateStr, data) {
-        console.log(`[Debug] Adding time range for hour ${hour} on ${dateStr}`);
-
-        let newDateStr = dateStr;
-        if (hour < 0) {
-            newDateStr = adjustDateStr(dateStr, -1); // Correctly adjust to the previous day
-            hour = 23;
-        } else if (hour > 23) {
-            newDateStr = adjustDateStr(dateStr, 1); // Correctly adjust to the next day
-            hour = 0;
+        let newDateStr = adjustDateStr(dateStr, hour < 0 ? -1 : hour > 23 ? 1 : 0);
+        let newHour = (hour + 24) % 24; // Adjusts hour to be within 0-23 range
+        const range = hourToRangeString(newHour);
+    
+        // Initialize the array for the date if it doesn't exist
+        if (!data[newDateStr]) {
+            data[newDateStr] = [];
         }
-        const range = hourToRangeString(hour);
-        if (!data[newDateStr]) data[newDateStr] = [];
+    
+        // Now safely use `includes` since `data[newDateStr]` is guaranteed to be an array
         if (!data[newDateStr].includes(range)) {
             data[newDateStr].push(range);
+            console.log(`[Debug] Added time range ${range} to ${newDateStr}`);
         }
     }
+    
     
     function removeTimeRange(hour, dateStr, data) {
         console.log(`[Debug] Removing time range for hour ${hour} on ${dateStr}`);
