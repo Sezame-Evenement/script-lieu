@@ -244,6 +244,49 @@ document.addEventListener("DOMContentLoaded", function () {
         mergeDataAndUpdateInput();
     }
 
+    function handleHourSelections(selectedHours, key, dataToUpdate) {
+        selectedHours.forEach(hour => {
+            let formattedHour = hourToRangeString(parseInt(hour.split(':')[0], 10));
+            dataToUpdate[key].push(formattedHour);
+        });
+    
+        // Sort hours to ensure correct order for transition checks
+        let hoursNumeric = selectedHours.map(hour => parseInt(hour.split(':')[0], 10)).sort((a, b) => a - b);
+    
+        // Handle day transitions based on the first and last hours selected
+        if (hoursNumeric.length > 0) {
+            handleTransitionalHours(hoursNumeric, key, dataToUpdate);
+        }
+    
+        // Ensure the data for each key is unique and sorted by hour
+        Object.keys(dataToUpdate).forEach(dateKey => {
+            dataToUpdate[dateKey] = [...new Set(dataToUpdate[dateKey])].sort((a, b) => parseInt(a) - parseInt(b));
+        });
+    }
+
+    function handleTransitionalHours(hoursNumeric, key, dataToUpdate) {
+        let firstHour = hoursNumeric[0];
+        let lastHour = hoursNumeric[hoursNumeric.length - 1];
+    
+        // Adjust for previous day if the first hour is 0
+        if (firstHour === 0) {
+            let prevDayKey = adjustDateStr(key, -1);
+            dataToUpdate[prevDayKey] = dataToUpdate[prevDayKey] || [];
+            dataToUpdate[prevDayKey].push("23h à 0h");
+        }
+    
+        // Adjust for next day if the last hour is 23
+        if (lastHour === 23) {
+            let nextDayKey = adjustDateStr(key, 1);
+            dataToUpdate[nextDayKey] = dataToUpdate[nextDayKey] || [];
+            dataToUpdate[nextDayKey].push("0h à 1h");
+        }
+    }
+    
+    function formatDateKey(date) {
+        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+    }
+
     function handleTransitionalHours(hoursNumeric, key, dataToUpdate) {
         let firstHour = hoursNumeric[0];
         let lastHour = hoursNumeric[hoursNumeric.length - 1];
