@@ -235,9 +235,16 @@ document.addEventListener("DOMContentLoaded", function () {
     $('.checkbox-container').on('change', '.checkbox-hour', function() {
         const containerId = $(this).closest('.checkbox-container').data('id');
         console.log(`Checkbox change detected in ${containerId}`);
+    
+        // Log the selected hours
+        const selectedHours = getSelectedHours(containerId);
+        console.log(`Selected hours for ${containerId}:`, selectedHours);
+    
+        // Call the function to update the first date input
         const selectedDates = dateInput.selectedDates;
         updateFirstDateInput(selectedDates, containerId);
     });
+    
     
 
 
