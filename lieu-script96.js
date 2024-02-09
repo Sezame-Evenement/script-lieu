@@ -134,9 +134,18 @@ document.addEventListener("DOMContentLoaded", function () {
     function getSelectedHours(containerId) {
         return $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).map(function() {
             // Extract only the hour part and parse it as an integer
-            return parseInt($(this).val().split('h')[0], 10);
+            let hourString = $(this).val();
+            let hourIndex = hourString.indexOf('h');
+            if (hourIndex !== -1) {
+                let hour = parseInt(hourString.substring(0, hourIndex), 10);
+                if (!isNaN(hour)) {
+                    return hour;
+                }
+            }
+            return NaN; // Return NaN if parsing fails
         }).get().filter(hour => !isNaN(hour)); // Filter out any NaN values
     }
+    
     
     
     
