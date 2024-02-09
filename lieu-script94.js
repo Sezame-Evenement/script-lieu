@@ -114,11 +114,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     
     function processContainerSelections(containerId, dateStr) {
-        let selectedHours = getSelectedHours(containerId); // Ensure this returns a valid list of integers
-        
+        let selectedHours = getSelectedHours(containerId); // Ensure this returns valid integers
+    
         selectedHours.forEach(hour => {
             // Convert each hour to a range string before adding to data
-            let hourRange = hourToRangeString(hour); // Make sure hour is valid and gets correctly converted
+            let hourRange = hourToRangeString(parseInt(hour)); // Parse hour as an integer
             if (hourRange !== "Invalid hour") { // Check if hourRange is valid
                 updateContainerData(containerId, dateStr, hourRange); // Update data with the formatted hour range
             } else {
@@ -133,9 +133,10 @@ document.addEventListener("DOMContentLoaded", function () {
     
     function getSelectedHours(containerId) {
         return $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).map(function() {
-            return parseInt($(this).val().split(':')[0], 10); // Safely parse hour as integer
+            return parseInt($(this).val().split(':')[0], 10); // Parse hour as an integer
         }).get().filter(hour => !isNaN(hour)); // Filter out any NaN values
     }
+    
     
 
     function adjustSelectionsForDayTransition(selectedHours, dateStr, containerId) {
@@ -330,10 +331,11 @@ function removeTransitionalHours(dateStr, data) {
             console.error("Invalid hour input for hourToRangeString:", hour);
             return "Invalid hour"; // or any other error handling
         }
-        let startHour = hour % 24;
-        let endHour = (startHour + 1) % 24;
+        let startHour = hour;
+        let endHour = (hour + 1) % 24;
         return `${startHour}h à ${endHour}h`;
     }
+    
     
     
     function updateHourSelection(data, dateStr, add = true) {
