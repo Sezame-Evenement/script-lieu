@@ -157,6 +157,8 @@ document.addEventListener("DOMContentLoaded", function () {
     
     document.addEventListener('change', function(event) {
         if ($(event.target).closest('.checkbox-container').length) {
+            console.log("Checkbox change detected in container: ", $(event.target).closest('.checkbox-container').data('id'));
+
             const selectedDates = dateInput.selectedDates;
             const containerId = $(event.target).closest('.checkbox-container').data('id');
             console.log(`Checkbox change detected in ${containerId}`);
@@ -171,6 +173,10 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log("First container date:", formatDate(firstContainerDate));
             console.log("Second container date:", formatDate(secondContainerDate));
             
+            const checkboxValue = event.target.value;
+            console.log("Selected checkbox value: ", checkboxValue);
+
+
             // Update the input for the first container
             updateFirstDateInput(selectedDates, containerId);
             
@@ -420,9 +426,7 @@ function removeTransitionalHours(dateStr, data) {
                     const checkboxDiv = $("<div>", { class: "checkbox-item" });
                     const label = $("<label>", { text: formattedHour, for: `checkbox-${containerId}-${hour}`, style: isDisabled ? "color: #777; text-decoration: line-through; cursor: not-allowed;" : "" });
                     const checkbox = $("<input>", { type: "checkbox", value: `${hour}:00`, id: `checkbox-${containerId}-${hour}`, class: "checkbox-hour", disabled: isDisabled, name: `checkbox-${containerId}` });
-                    // Log the value of the checkbox
-                    console.log(`Checkbox value for ${containerId}: ${hour}:00 - ${((hour + 1) % 24)}:00`);
-                    checkboxDiv.append(label);
+                                       checkboxDiv.append(label);
                     checkboxDiv.append(checkbox);
                     checkboxContainer.append(checkboxDiv);
                 }
