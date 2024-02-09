@@ -140,14 +140,29 @@ document.addEventListener("DOMContentLoaded", function () {
     
         // Combine data from both containers
         Object.keys(container1Data).forEach(date => {
-            mergedData[date] = [...(mergedData[date] || []), ...(container1Data[date] || [])];
+            if (!mergedData[date]) mergedData[date] = [];
+            mergedData[date] = [...mergedData[date], ...container1Data[date]];
         });
+    
+        // Adjust date for container 2 and combine data
         Object.keys(container2Data).forEach(date => {
-            mergedData[date] = [...(mergedData[date] || []), ...(container2Data[date] || [])];
+            // Adjusting the date for container 2 if necessary or directly use the date
+            const adjustedDate = adjustDateForContainer2(date);
+            if (!mergedData[adjustedDate]) mergedData[adjustedDate] = [];
+            mergedData[adjustedDate] = [...mergedData[adjustedDate], ...container2Data[date]];
         });
     
         // Convert mergedData to the correct format for firstdateinput
         $('.firstdateinput').val(JSON.stringify(mergedData));
+        dateFullDisabledInput.value = JSON.stringify(mergedData); // Update dateFullDisabledInput similarly
+    }
+    
+    // Example helper function to adjust the date for container 2 data
+    function adjustDateForContainer2(date) {
+        // Assuming 'date' is already in 'YYYY-MM-DD' format
+        let dateObj = new Date(date);
+        dateObj.setDate(dateObj.getDate() + 1); // Adjusting date for container 2
+        return dateObj.toISOString().split('T')[0];
     }
     
     document.addEventListener('change', function(event) {
