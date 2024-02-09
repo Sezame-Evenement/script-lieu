@@ -135,6 +135,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 addTimeRange(0, nextDay, containerId); // Adjust for the next day
             }
         });
+        console.log(`Updated ${containerId} data:`, dataToUpdate);
+
     }
     
     // This function encapsulates the logic for merging data and updating the input
