@@ -1,4 +1,4 @@
-<script>
+
 document.addEventListener("DOMContentLoaded", function() {
 let container1Data = {};
 let container2Data = {};
@@ -319,4 +319,4 @@ moreDaysButton.prop('disabled', selectedDates.length > 0 && (selectedDates[0].ge
 function formatDate(date) {
 return date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 }
-</script>
+
