@@ -153,32 +153,38 @@ document.addEventListener("DOMContentLoaded", function() {
     else if (!isSelected && wasSelected) {
       removeTimeRange(hour, date, data, selectedDate);
   
-      // Remove adjacent hours only if they were added due to previous selection
+      // Only remove adjacent hours if they are no longer adjacent to any selected hours
       const hoursToCheck = [...previouslySelectedHours].filter(
         selectedHour => !currentlySelectedHours.has(selectedHour)
       );
       for (let selectedHour of hoursToCheck) {
-        if (selectedHour === selectedHours[0] || selectedHour > selectedHours[0]) {
-          if (selectedHour === selectedHours[0] && hourBefore > selectedHours[selectedHours.length - 1]) {
-            const prevDate = new Date(selectedDate);
-            prevDate.setDate(prevDate.getDate() - 1);
-            removeTimeRange(hourBefore, prevDate.toLocaleDateString('fr-CA'), data, prevDate);
-          } else {
-            removeTimeRange(hourBefore, date, data, selectedDate);
+        const hasAdjacentSelectedHour = selectedHours.some(
+          currentHour => selectedHour === currentHour + 1 || selectedHour === currentHour - 1
+        );
+        if (!hasAdjacentSelectedHour) {
+          if (selectedHour === selectedHours[0] || selectedHour > selectedHours[0]) {
+            if (selectedHour === selectedHours[0] && hourBefore > selectedHours[selectedHours.length - 1]) {
+              const prevDate = new Date(selectedDate);
+              prevDate.setDate(prevDate.getDate() - 1);
+              removeTimeRange(hourBefore, prevDate.toLocaleDateString('fr-CA'), data, prevDate);
+            } else {
+              removeTimeRange(hourBefore, date, data, selectedDate);
+            }
           }
-        }
-        if (selectedHour === selectedHours[selectedHours.length - 1] || selectedHour < selectedHours[0]) {
-          if (selectedHour === selectedHours[selectedHours.length - 1] && hourAfter < selectedHours[0]) {
-            const nextDate = new Date(selectedDate);
-            nextDate.setDate(nextDate.getDate() + 1);
-            removeTimeRange(hourAfter, nextDate.toLocaleDateString('fr-CA'), data, nextDate);
-          } else {
-            removeTimeRange(hourAfter, date, data, selectedDate);
+          if (selectedHour === selectedHours[selectedHours.length - 1] || selectedHour < selectedHours[0]) {
+            if (selectedHour === selectedHours[selectedHours.length - 1] && hourAfter < selectedHours[0]) {
+              const nextDate = new Date(selectedDate);
+              nextDate.setDate(nextDate.getDate() + 1);
+              removeTimeRange(hourAfter, nextDate.toLocaleDateString('fr-CA'), data, nextDate);
+            } else {
+              removeTimeRange(hourAfter, date, data, selectedDate);
+            }
           }
         }
       }
     }
   }
+  
   
   
     
