@@ -72,6 +72,8 @@ updateFirstDateInput(selectedDates, containerId);
 }
 });
 function updateFirstDateInput(selectedDates, containerId) {
+    console.log('updateFirstDateInput triggered', { selectedDates, containerId });
+
 let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
 const dateIndex = containerId === 'container1' ? 0 : 1;
 const selectedDate = selectedDates[dateIndex];
@@ -104,15 +106,21 @@ mergeDataAndUpdateInput();
 
 
 function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
+    console.log('handleTimeSlot', { hour, date: date.toLocaleDateString(), currentlySelectedHours, previouslySelectedHours });
+
 const isSelected = currentlySelectedHours.has(hour);
 const wasSelected = previouslySelectedHours.has(hour);
 
 
 if (isSelected && !wasSelected) {
+    console.log(`Adding hour and neighbors for selected hour: ${hour} on date: ${date}`);
+
 addTimeRange(hour, date, data, selectedDate);
 addTimeRange(hour - 1, date, data, selectedDate);
 addTimeRange(hour + 1, date, data, selectedDate);
 } else if (!isSelected && wasSelected) {
+    console.log(`Removing hour and neighbors for deselected hour: ${hour} on date: ${date}`);
+
 removeTimeRange(hour, date, data, selectedDate);
 removeTimeRange(hour - 1, date, data, selectedDate);
 removeTimeRange(hour + 1, date, data, selectedDate);
@@ -124,6 +132,8 @@ removeTimeRange(hour + 1, date, data, selectedDate);
 
 
 function addTimeRange(hour, date, data, selectedDate, isPrevDay = false, isNextDay = false) {
+    console.log('Adding time range', { hour, date: date.toLocaleDateString('fr-CA') });
+
 if (hour < 0) {
 hour = 23;
 isPrevDay = true;
@@ -151,6 +161,8 @@ data[targetFormattedDate].push(range);
 
 
 function removeTimeRange(hour, date, data, selectedDate, isPrevDay = false, isNextDay = false) {
+    console.log('Removing time range', { hour, date: date.toLocaleDateString('fr-CA') });
+
 
 let targetDate = new Date(selectedDate);
 targetDate = adjustDateForHour(hour, targetDate);
@@ -194,6 +206,8 @@ data[targetFormattedDate].splice(index, 1);
 
 
 function mergeDataAndUpdateInput() {
+    console.log('mergeDataAndUpdateInput called');
+    console.log('Before merge:', { container1Data, container2Data });
 let mergedData = {};
 
 const existingData = getExistingData();
@@ -215,6 +229,8 @@ delete mergedData[date];
 }
 
 $('.firstdateinput').val(JSON.stringify(mergedData));
+console.log('After merge:', { mergedData });
+
 }
 
 
