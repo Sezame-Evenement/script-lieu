@@ -204,21 +204,41 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateCheckboxOptions(selectedDates, containerId) {
-        console.log(`Updating checkbox options for ${containerId}`);
         const openingHourStr = $('#ouverture-lieu').text();
         const openingHour = parseInt(openingHourStr.split(/[:h]/)[0]);
         const closingHourStr = $('#fermeture-lieu').text();
         const closingHour = parseInt(closingHourStr.split(/[:h]/)[0]);
+        const disabledHoursElement = document.querySelector('.paragraph-dhours');
+        const disabledHoursText = disabledHoursElement.textContent.trim();
+        const disabledHours = parseJson(disabledHoursText) || {};
         const checkboxContainer = $(`.checkbox-container[data-id="${containerId}"]`);
         checkboxContainer.empty();
-        for (let hour = openingHour; hour < closingHour; hour++) {
-            const hourRange = hourToRangeString(hour);
-            const checkboxDiv = $("<div>", { class: "checkbox-item" });
-            const label = $("<label>", { text: hourRange }).appendTo(checkboxDiv);
-            $("<input>", { type: "checkbox", value: `${hour}`, class: "checkbox-hour" }).appendTo(label);
-            checkboxContainer.append(checkboxDiv);
+        const upperLimitHour = (containerId === 'container2') ? closingHour : 24;
+        for (let hour = 0; hour < upperLimitHour; hour++) {
+            const isWithinRange = (closingHour > openingHour) ? (hour >= openingHour && hour < closingHour) : (hour >= openingHour || hour < closingHour);
+            if (isWithinRange) {
+                const isDisabled = selectedDates.some(selectedDate => {
+                    const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
+                    return (disabledHours[formattedSelectedDate] || [])
+                        .some(disabledHour => {
+                            const [start, end] = disabledHour.split(' à ');
+                            const [startHour] = start.split('h');
+                            const [endHour] = end.split('h');
+                            const selectedHour = parseInt(hour);
+                            return (startHour === '23' && endHour === '0' && (selectedHour === 23 || selectedHour === 0)) || (startHour !== '23' && selectedHour >= parseInt(startHour) && selectedHour < parseInt(endHour));
+                        });
+                });
+                const formattedHour = `${hour.toString().padStart(2, '0')}h00 à ${((hour + 1) % 24).toString().padStart(2, '0')}h00`;
+                const checkboxDiv = $("<div>", { class: "checkbox-item" });
+                const label = $("<label>", { text: formattedHour, for: `checkbox-${containerId}-${hour}`, style: isDisabled ? "color: #777; text-decoration: line-through; cursor: not-allowed;" : "" });
+                const checkbox = $("<input>", { type: "checkbox", value: `${hour}:00`, id: `checkbox-${containerId}-${hour}`, class: "checkbox-hour", disabled: isDisabled, name: `checkbox-${containerId}` });
+                checkboxDiv.append(label);
+                checkboxDiv.append(checkbox);
+                checkboxContainer.append(checkboxDiv);
+            }
         }
     }
+
 
     function updateMoreDaysButton(selectedDates) {
         console.log("Updating more days button state");
