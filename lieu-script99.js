@@ -269,40 +269,47 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log(`${containerId} selected date key:`, key);
     
         // Fetch all hours currently selected in the UI for this date
-        const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
+        const selectedHoursBefore = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
             .map(function() { return $(this).val(); })
             .get();
+    
+        console.log(`Selected hours before deselection for ${containerId}:`, selectedHoursBefore);
     
         // Update or initialize the array for this date in the data structure
         if (!dataToUpdate[key]) {
             dataToUpdate[key] = [];
         }
     
-        selectedHours.forEach(hour => {
+        const selectedHoursAfter = selectedHoursBefore.filter(hour => {
             // Assuming hour is already an integer
             let formattedRange = hourToRangeString(hour); // Format to "HHh à HHh"
-            if (!dataToUpdate[key].includes(formattedRange)) {
-                dataToUpdate[key].push(formattedRange);
+            let index = dataToUpdate[key].indexOf(formattedRange);
+            if (index !== -1) {
+                dataToUpdate[key].splice(index, 1); // Remove the hour range if found
+                return false; // Filter out this hour
             }
+            return true; // Keep this hour
         });
-        
-
-    // Add one hour before the first and after the last selection, if there are any selections.
-    if (selectedHours.length > 0) {
-        const firstHour = parseInt(selectedHours[0].split(':')[0], 10); // Assuming 'selectedHours' format is 'HH:mm'
-        const lastHour = parseInt(selectedHours[selectedHours.length - 1].split(':')[0], 10);
     
-        // Parsing hour might be necessary depending on the format in 'selectedHours'
-        addTimeRange(firstHour - 1, key, dataToUpdate);
-        addTimeRange(lastHour + 1, key, dataToUpdate);
-    } else {
-        // Ensure transitional hours are correctly handled using 'key'
-        removeTransitionalHours(key, dataToUpdate);
+        console.log(`Selected hours after deselection for ${containerId}:`, selectedHoursAfter);
+    
+        // Add one hour before the first and after the last selection, if there are any selections.
+        if (selectedHoursAfter.length > 0) {
+            const firstHour = parseInt(selectedHoursAfter[0].split(':')[0], 10); // Assuming 'selectedHours' format is 'HH:mm'
+            const lastHour = parseInt(selectedHoursAfter[selectedHoursAfter.length - 1].split(':')[0], 10);
+    
+            // Parsing hour might be necessary depending on the format in 'selectedHours'
+            addTimeRange(firstHour - 1, key, dataToUpdate);
+            addTimeRange(lastHour + 1, key, dataToUpdate);
+        } else {
+            // Ensure transitional hours are correctly handled using 'key'
+            removeTransitionalHours(key, dataToUpdate);
+        }
+        console.log(`Data to update after handling ${containerId}:`, dataToUpdate);
+    
+        mergeDataAndUpdateInput();
     }
-    console.log(`Data to update after handling ${containerId}:`, dataToUpdate);
-
-    mergeDataAndUpdateInput();
-}
+    
 
 function removeTransitionalHours(dateStr, data) {
     // Remove 23h from the previous day and 0h from the next day if they exist as orphaned entries.
