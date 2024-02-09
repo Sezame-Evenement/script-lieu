@@ -10,6 +10,8 @@ document.addEventListener("DOMContentLoaded", function() {
     return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
     }],
     onChange: function(selectedDates) {
+    console.log("Date selection changed:", selectedDates.map(date => date.toLocaleDateString()));
+
     if (selectedDates.length > 0) {
     initialSelectedDate = selectedDates[0];
     $(".date-heading").eq(0).text(formatDate(selectedDates[0]));
@@ -41,6 +43,8 @@ document.addEventListener("DOMContentLoaded", function() {
     
     const moreDaysButton = document.querySelector(".moredays");
     moreDaysButton.addEventListener("click", function() {
+        console.log("More days button clicked.");
+
     const selectedDates = dateInput.selectedDates;
     if (selectedDates.length > 0 && !initialSelectedDate) {
     initialSelectedDate = selectedDates[0];
@@ -66,6 +70,8 @@ document.addEventListener("DOMContentLoaded", function() {
     const firstDateInput = document.querySelector('.firstdateinput');
     document.addEventListener('change', function(event) {
     if ($(event.target).closest('.checkbox-container').length) {
+                    console.log("Checkbox change detected in container:", $(event.target).closest('.checkbox-container').data('id'));
+
     const containerId = $(event.target).closest('.checkbox-container').data('id');
     const selectedDates = dateInput.selectedDates;
     updateFirstDateInput(selectedDates, containerId);
@@ -104,6 +110,8 @@ document.addEventListener("DOMContentLoaded", function() {
     
     
     function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
+                console.log(`Handling time slot for hour ${hour} on date ${date}`);
+
       const isSelected = currentlySelectedHours.has(hour);
       const wasSelected = previouslySelectedHours.has(hour);
     
@@ -194,6 +202,8 @@ document.addEventListener("DOMContentLoaded", function() {
     
     
     function addTimeRange(hour, date, data, selectedDate, isPrevDay = false, isNextDay = false) {
+                console.log(`Adding time range for hour ${hour} on date ${date}`);
+
         if (hour < 0) {
           hour = 23;
           isPrevDay = true;
@@ -242,6 +252,8 @@ document.addEventListener("DOMContentLoaded", function() {
       }
 
     function removeTimeRange(hour, date, data, selectedDate, isPrevDay = false, isNextDay = false) {
+                console.log(`Removing time range for hour ${hour} on date ${date}`);
+
     
     let targetDate = new Date(selectedDate);
     targetDate = adjustDateForHour(hour, targetDate);
