@@ -106,7 +106,6 @@ mergeDataAndUpdateInput();
 
 
 function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
-    console.log('handleTimeSlot', { hour, date: date.toLocaleDateString(), currentlySelectedHours, previouslySelectedHours });
 
 const isSelected = currentlySelectedHours.has(hour);
 const wasSelected = previouslySelectedHours.has(hour);
