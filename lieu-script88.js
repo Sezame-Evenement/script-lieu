@@ -139,25 +139,25 @@ document.addEventListener("DOMContentLoaded", function () {
     function mergeDataAndUpdateInput() {
         let mergedData = {};
     
-        console.log("[Debug] Merging container data into firstdateinput and datefulldisabled");
-    
         // Combine data from both containers
         Object.keys(container1Data).forEach(date => {
             if (!mergedData[date]) mergedData[date] = [];
             mergedData[date] = mergedData[date].concat(container1Data[date]);
+            console.log(`[Debug] Merging container1 data for ${date}:`, container1Data[date]);
         });
         Object.keys(container2Data).forEach(date => {
             if (!mergedData[date]) mergedData[date] = [];
             mergedData[date] = mergedData[date].concat(container2Data[date]);
+            console.log(`[Debug] Merging container2 data for ${date}:`, container2Data[date]);
         });
     
+        // Debugging: Log merged data before updating input fields
         console.log("[Debug] Merged Data:", mergedData);
     
-        // Update `firstdateinput` and `datefulldisabled` inputs
         $('.firstdateinput').val(JSON.stringify(mergedData));
-        $('#datefulldisabled').val(JSON.stringify(mergedData)); // Assuming this needs the same format
+        $('#datefulldisabled').val(JSON.stringify(mergedData)); // Ensure this is the desired behavior
     
-        console.log("[Debug] Updated firstdateinput and datefulldisabled");
+        console.log("[Debug] firstdateinput and datefulldisabled updated.");
     }
     
     
