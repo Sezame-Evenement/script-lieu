@@ -177,12 +177,15 @@ document.addEventListener("DOMContentLoaded", function () {
             const checkboxValue = event.target.value;
             console.log("Selected checkbox value: ", checkboxValue);
 
-
+            console.log("Container 2 data before updating:", container2Data);
+            console.log("Selected checkbox value for container 2:", $(event.target).val());
             // Update the input for the first container
             updateFirstDateInput(selectedDates, containerId);
             
             // Update the disabled dates input
             updateDateFullDisabled(selectedDates);
+            console.log("Updated Container 2 data:", container2Data);
+
         }
     });
     
@@ -216,6 +219,9 @@ document.addEventListener("DOMContentLoaded", function () {
         let currentSelections = dataToUpdate[formattedSelectedDate] || [];
     
         console.log(`Updating first date input for ${containerId}, selected date: ${formattedSelectedDate}`);
+        console.log("First container date before updating firstdateinput:", formatDate(selectedDates[0]));
+        // Update the console log to include the updated value of firstdateinput
+        console.log("First date input value after updating:", $('.firstdateinput').val());
         
         // Clear selections for the date to handle deselection.
         dataToUpdate[formattedSelectedDate] = [];
@@ -290,8 +296,10 @@ function removeTransitionalHours(dateStr, data) {
         console.log("Updated data:", updatedData);
     
         dateFullDisabledInput.value = JSON.stringify(updatedData);
-        console.log("Updated dateFullDisabledInput:", dateFullDisabledInput.value);
-    }
+        console.log("DateFullDisabledInput before updating:", dateFullDisabledInput.value);
+        // Add console log statements within the updateDateFullDisabled function to track its execution
+        console.log("Updated dateFullDisabledInput value:", dateFullDisabledInput.value);
+    }  
     
     
     
