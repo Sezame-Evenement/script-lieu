@@ -152,10 +152,10 @@ document.addEventListener("DOMContentLoaded", function () {
     
     document.addEventListener('change', function(event) {
         if ($(event.target).closest('.checkbox-container').length) {
-            console.log("Change detected in container: ", $(event.target).closest('.checkbox-container').data('id'));
-            const selectedDates = dateInput.selectedDates;
-            updateFirstDateInput(selectedDates, $(event.target).closest('.checkbox-container').data('id'));
-            updateDateFullDisabled(selectedDates);
+            const containerId = $(event.target).closest('.checkbox-container').data('id');
+            console.log(`Checkbox change detected in ${containerId}`);
+            updateFirstDateInput(dateInput.selectedDates, containerId);
+            updateDateFullDisabled();
         }
     });
     
