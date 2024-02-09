@@ -286,6 +286,7 @@ document.addEventListener("DOMContentLoaded", function () {
             let index = dataToUpdate[key].indexOf(formattedRange);
             if (index !== -1) {
                 dataToUpdate[key].splice(index, 1); // Remove the hour range if found
+                console.log(`Removing hour ${formattedRange} from dataToUpdate[${key}]`);
                 return false; // Filter out this hour
             }
             return true; // Keep this hour
@@ -307,8 +308,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         console.log(`Data to update after handling ${containerId}:`, dataToUpdate);
     
-            updateDateFullDisabled();
-
+        // Update dateFullDisabledInput
+        updateDateFullDisabled();
+    
+        // Update the first date input
         mergeDataAndUpdateInput();
     }
     
