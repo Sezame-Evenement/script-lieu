@@ -106,20 +106,17 @@ mergeDataAndUpdateInput();
 
 
 function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
+    console.log('handleTimeSlot', { hour, date: date.toLocaleDateString(), currentlySelectedHours, previouslySelectedHours });
 
 const isSelected = currentlySelectedHours.has(hour);
 const wasSelected = previouslySelectedHours.has(hour);
 
 
 if (isSelected && !wasSelected) {
-    console.log(`Adding hour and neighbors for selected hour: ${hour} on date: ${date}`);
-
 addTimeRange(hour, date, data, selectedDate);
 addTimeRange(hour - 1, date, data, selectedDate);
 addTimeRange(hour + 1, date, data, selectedDate);
 } else if (!isSelected && wasSelected) {
-    console.log(`Removing hour and neighbors for deselected hour: ${hour} on date: ${date}`);
-
 removeTimeRange(hour, date, data, selectedDate);
 removeTimeRange(hour - 1, date, data, selectedDate);
 removeTimeRange(hour + 1, date, data, selectedDate);
@@ -205,8 +202,6 @@ data[targetFormattedDate].splice(index, 1);
 
 
 function mergeDataAndUpdateInput() {
-    console.log('mergeDataAndUpdateInput called');
-    console.log('Before merge:', { container1Data, container2Data });
 let mergedData = {};
 
 const existingData = getExistingData();
@@ -228,8 +223,6 @@ delete mergedData[date];
 }
 
 $('.firstdateinput').val(JSON.stringify(mergedData));
-console.log('After merge:', { mergedData });
-
 }
 
 
