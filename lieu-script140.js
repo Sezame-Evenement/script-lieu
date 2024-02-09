@@ -472,29 +472,35 @@ function removeTransitionalHours(dateStr, data) {
 
     function mergeDataAndUpdateInput() {
         let mergedData = {};
-        const existingData = getExistingData();
-        let allDates = new Set([...Object.keys(container1Data), ...Object.keys(container2Data), ...Object.keys(existingData)]);
-
-        console.log("Container 1 data:", container1Data);
-        console.log("Container 2 data:", container2Data);
-    
-
-        allDates.forEach(date => {
-            let dataFromContainer1 = container1Data[date] || [];
-            let dataFromContainer2 = container2Data[date] || [];
-            let existingDataForDate = existingData[date] || [];
-
-            mergedData[date] = [...new Set([...dataFromContainer1, ...dataFromContainer2, ...existingDataForDate])];
+        // Combine data from both containers before updating inputs
+        Object.keys(container1Data).forEach(date => {
+            if (!mergedData[date]) mergedData[date] = [];
+            mergedData[date] = mergedData[date].concat(container1Data[date]);
         });
-
-        for (let date in mergedData) {
-            if (mergedData[date].length === 0) {
-                delete mergedData[date];
-            }
-        }
-
-    $('.firstdateinput').val(JSON.stringify(mergedData));
+    
+        Object.keys(container2Data).forEach(date => {
+            if (!mergedData[date]) mergedData[date] = [];
+            mergedData[date] = mergedData[date].concat(container2Data[date]);
+        });
+    
+        // Deduplicate entries for each date
+        Object.keys(mergedData).forEach(date => {
+            mergedData[date] = [...new Set(mergedData[date])];
+        });
+    
+        // Update inputs
+        $('.firstdateinput').val(JSON.stringify(mergedData));
+        $('#datefulldisabled').val(JSON.stringify(mergedData));
+        console.log("Updated firstdateinput and datefulldisabled with merged data:", mergedData);
     }
+
+    document.addEventListener('change', function(event) {
+        if ($(event.target).closest('.checkbox-container[data-id="container2"]').length) {
+            // Handle the selection change for container2
+            console.log("Selection change detected in container2");
+            processSelections(); // Assuming this function appropriately updates container2Data and then calls mergeDataAndUpdateInput
+        }
+    });
 
     function getExistingData() {
         const existingDataElement = document.querySelector('.paragraph-dhours');
