@@ -208,7 +208,10 @@ document.addEventListener("DOMContentLoaded", function () {
         let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
         const dateIndex = containerId === 'container1' ? 0 : 1;
         const selectedDate = selectedDates[dateIndex];
-        if (!selectedDate) return;
+        if (!selectedDate) {
+            console.log(`Selected date for ${containerId} is undefined. Skipping update.`);
+            return; // Exit the function if selectedDate is undefined
+        }
     
         const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
         let currentSelections = dataToUpdate[formattedSelectedDate] || [];
