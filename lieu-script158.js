@@ -105,7 +105,6 @@ document.addEventListener("DOMContentLoaded", function() {
     
     
     function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours, selectedHours) {
-        const selectedHours = global.selectedHours;
 
         const isSelected = currentlySelectedHours.has(hour);
         const wasSelected = previouslySelectedHours.has(hour);
