@@ -87,6 +87,8 @@ document.addEventListener("DOMContentLoaded", function () {
     function processContainerSelections(containerId, dateStr) {
         console.log(`Processing selections for ${containerId} on ${dateStr}`);
         let selectedHours = getSelectedHours(containerId);
+        console.log(`Processing selections for ${containerId} on ${dateStr}: Selected hours:`, selectedHours);
+
         adjustSelectionsForDayTransition(selectedHours, dateStr, containerId);
         updateContainerData(containerId, dateStr, selectedHours);
     }
@@ -97,6 +99,8 @@ document.addEventListener("DOMContentLoaded", function () {
         $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`).each(function() {
             selectedHours.push(parseInt($(this).val().split(':')[0], 10));
         });
+        console.log(`Selected hours in ${containerId}:`, selectedHours);
+
         return selectedHours.sort((a, b) => a - b);
     }
 
@@ -117,6 +121,8 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log(`Updating container data for ${containerId}`, selectedHours);
 
         let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
+        console.log(`Updating first date input for ${containerId}, selected dates: ${selectedDates.map(date => date.toLocaleDateString('fr-CA'))}`);
+
         // Reset the date's data before updating
         dataToUpdate[dateStr] = [];
         
@@ -152,6 +158,8 @@ document.addEventListener("DOMContentLoaded", function () {
     
         // Convert mergedData to the correct format for firstdateinput
         $('.firstdateinput').val(JSON.stringify(mergedData));
+        console.log("Merged data for firstdateinput:", $('.firstdateinput').val());
+    console.log("Updated dateFullDisabledInput value:", $('#datefulldisabled').val());
     }
     
     document.addEventListener('change', function(event) {
