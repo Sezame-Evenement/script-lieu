@@ -273,13 +273,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const selectedDate = selectedDates[dateIndex];
         if (!selectedDate) return;
     
-        const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
-        let currentSelections = dataToUpdate[formattedSelectedDate] || [];
+        const key = selectedDate.toLocaleDateString('fr-CA');
     
-        console.log(`Updating first date input for ${containerId}, selected date: ${formattedSelectedDate}`);
-        console.log("First container date before updating firstdateinput:", formatDate(selectedDates[0]));
-        // Update the console log to include the updated value of firstdateinput
-        console.log("First date input value after updating:", $('.firstdateinput').val());
+        console.log(`Updating first date input for ${containerId}, selected date: ${key}`);
     
         // Fetch and format selected hours
         const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
@@ -289,31 +285,27 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .get();
     
-        // Generate the correct key for accessing and storing date-specific data
-        let key = `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
-    
-        console.log(`Selected date for ${containerId}:`, key);
-    
         // Update the data structure with the selected hours, using the correct date key
         dataToUpdate[key] = selectedHours;
         console.log(`Data to update after handling ${containerId}:`, dataToUpdate);
     
         // Re-add selected hours, adjusting for added hours before the first and after the last selection.
-        selectedHours.forEach(hour => addTimeRange(hour, formattedSelectedDate, dataToUpdate));
+        selectedHours.forEach(hour => addTimeRange(hour, key, dataToUpdate));
     
         // Add one hour before the first and after the last selection, if there are any selections.
         if (selectedHours.length > 0) {
             const firstHour = selectedHours[0];
             const lastHour = selectedHours[selectedHours.length - 1];
-            addTimeRange(firstHour - 1, formattedSelectedDate, dataToUpdate);
-            addTimeRange(lastHour + 1, formattedSelectedDate, dataToUpdate);
+            addTimeRange(firstHour - 1, key, dataToUpdate);
+            addTimeRange(lastHour + 1, key, dataToUpdate);
         } else {
             // If no hours are currently selected, ensure transitional hours are removed.
-            removeTransitionalHours(formattedSelectedDate, dataToUpdate);
+            removeTransitionalHours(key, dataToUpdate);
         }
     
         mergeDataAndUpdateInput();
     }
+    
     
     
     function updateDateFullDisabled(selectedDates) {
