@@ -223,96 +223,86 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateFirstDateInput(selectedDates, containerId) {
         let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
-        const dateIndex = containerId === 'container1' ? 0 : (selectedDates.length > 1 ? 1 : 0);
-        const selectedDate = selectedDates[dateIndex];
-        if (!selectedDate) {
-            console.error(`No selected date for ${containerId}`);
-            return; // Exit if no date is selected
-        }
+        let dateIndex = containerId === 'container1' ? 0 : (selectedDates.length > 1 ? 1 : 0);
+        let selectedDate = selectedDates[dateIndex];
+        if (!selectedDate) return; // Exit if no date is selected
     
-        // Use ISO string for key to ensure consistency
-        const key = selectedDate.toISOString().split('T')[0];
+        // Format the selected date as YYYY-MM-DD
+        let key = `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
     
-        // Initialize data structure for the selected date if not present
-        if (!dataToUpdate[key]) {
-            dataToUpdate[key] = [];
-        }
+        // Initialize the data structure for the date if it doesn't exist
+        dataToUpdate[key] = dataToUpdate[key] || [];
     
-        // Fetch all hours currently selected in the UI for this date
+        // Fetch selected hours for the current container
         const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
             .map(function() { return $(this).val(); })
             .get();
     
-        // Add selected hours to data structure, converting to range string if necessary
-        selectedHours.forEach(hour => {
-            const hourRange = hourToRangeString(parseInt(hour.split(':')[0], 10));
-            if (!dataToUpdate[key].includes(hourRange)) {
-                dataToUpdate[key].push(hourRange);
-            }
-        });
+        // Update data structure with selected hours
+        dataToUpdate[key] = selectedHours.map(hour => hourToRangeString(parseInt(hour.split(':')[0], 10)));
     
-        handleHourTransitions(selectedHours, key, dataToUpdate);
+        // Handle adding/removing transitional hours based on selections
+        handleTransitionalHours(selectedHours, key, dataToUpdate);
     
-        // Update firstdateinput and datefulldisabled
+        // Update inputs after handling selections
         mergeDataAndUpdateInput();
     }
     
-    function handleHourTransitions(selectedHours, key, dataToUpdate) {
-        // Logic to add one hour before the first and after the last selected hour, correctly handling day transition
-        if (selectedHours.length > 0) {
-            const numericHours = selectedHours.map(hour => parseInt(hour.split(':')[0], 10));
-            numericHours.sort((a, b) => a - b);
+    function handleTransitionalHours(selectedHours, key, dataToUpdate) {
+        if (selectedHours.length === 0) return;
     
-            const firstHour = numericHours[0];
-            const lastHour = numericHours[numericHours.length - 1];
+        let hours = selectedHours.map(hour => parseInt(hour.split(':')[0], 10)).sort((a, b) => a - b);
+        let firstHour = hours[0];
+        let lastHour = hours[hours.length - 1];
     
-            // Add one hour before the first selected hour
-            const prevHour = firstHour === 0 ? 23 : firstHour - 1;
-            const prevDayKey = firstHour === 0 ? adjustDateStr(key, -1) : key;
-            const prevHourRange = hourToRangeString(prevHour);
-            if (!dataToUpdate[prevDayKey]) {
-                dataToUpdate[prevDayKey] = [];
-            }
-            if (!dataToUpdate[prevDayKey].includes(prevHourRange)) {
-                dataToUpdate[prevDayKey].push(prevHourRange);
-            }
-    
-            // Add one hour after the last selected hour
-            const nextHour = lastHour === 23 ? 0 : lastHour + 1;
-            const nextDayKey = lastHour === 23 ? adjustDateStr(key, 1) : key;
-            const nextHourRange = hourToRangeString(nextHour);
-            if (!dataToUpdate[nextDayKey]) {
-                dataToUpdate[nextDayKey] = [];
-            }
-            if (!dataToUpdate[nextDayKey].includes(nextHourRange)) {
-                dataToUpdate[nextDayKey].push(nextHourRange);
-            }
+        // Handle adding an hour before the first selected hour if it's not 0
+        if (firstHour > 0) {
+            let prevHour = firstHour - 1;
+            dataToUpdate[key].push(hourToRangeString(prevHour));
+        } else {
+            let previousDayKey = adjustDateStr(key, -1);
+            dataToUpdate[previousDayKey] = dataToUpdate[previousDayKey] || [];
+            dataToUpdate[previousDayKey].push("23h à 0h");
         }
+    
+        // Handle adding an hour after the last selected hour if it's not 23
+        if (lastHour < 23) {
+            let nextHour = lastHour + 1;
+            dataToUpdate[key].push(hourToRangeString(nextHour));
+        } else {
+            let nextDayKey = adjustDateStr(key, 1);
+            dataToUpdate[nextDayKey] = dataToUpdate[nextDayKey] || [];
+            dataToUpdate[nextDayKey].push("0h à 1h");
+        }
+    
+        // Ensure data is unique and sorted
+        dataToUpdate[key] = [...new Set(dataToUpdate[key])].sort();
     }
-    
-    // Ensure adjustDateStr, hourToRangeString, and mergeDataAndUpdateInput functions are correctly implemented.
-    
     
     function mergeDataAndUpdateInput() {
         let mergedData = {};
     
-        // Combine container1Data and container2Data into mergedData
         Object.keys(container1Data).forEach(date => {
-            mergedData[date] = container1Data[date];
+            mergedData[date] = [...(mergedData[date] || []), ...(container1Data[date] || [])];
         });
         Object.keys(container2Data).forEach(date => {
-            if (!mergedData[date]) {
-                mergedData[date] = [];
-            }
-            mergedData[date] = mergedData[date].concat(container2Data[date]);
+            mergedData[date] = [...(mergedData[date] || []), ...(container2Data[date] || [])];
         });
     
-        // Update firstdateinput and datefulldisabled inputs
         $('.firstdateinput').val(JSON.stringify(mergedData));
-        $('#datefulldisabled').val(JSON.stringify(mergedData));
-
-        // Similar update logic for datefulldisabled based on mergedData
+        $('#datefulldisabled').val(JSON.stringify(mergedData)); // Assuming you want to update this input similarly
     }
+    
+    function adjustDateStr(dateStr, dayOffset) {
+        const date = new Date(dateStr);
+        date.setDate(date.getDate() + dayOffset);
+        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+    }
+    
+    function hourToRangeString(hour) {
+        return `${hour.toString().padStart(2, '0')}h à ${(hour + 1) % 24}h`;
+    }
+    
 
 function removeTransitionalHours(dateStr, data) {
     // Remove 23h from the previous day and 0h from the next day if they exist as orphaned entries.
@@ -354,11 +344,7 @@ function removeTransitionalHours(dateStr, data) {
         console.log("Updated dateFullDisabledInput:", dateFullDisabledInput.value);
     }
     
-    function hourToRangeString(hour) {
-        let startHour = hour % 24;
-        let endHour = (hour + 1) % 24;
-        return `${startHour}h à ${endHour}h`;
-    }
+   
     
     function updateHourSelection(data, dateStr, add = true) {
         // This function's usage has been streamlined in updateFirstDateInput
@@ -393,11 +379,7 @@ function removeTransitionalHours(dateStr, data) {
         data[newDateStr] = (data[newDateStr] || []).filter(range => range !== rangeToRemove);
     }
 
-    function adjustDateStr(dateStr, dayOffset) {
-        const date = new Date(dateStr);
-        date.setDate(date.getDate() + dayOffset);
-        return date.toISOString().split('T')[0];
-    }
+   
     
     
     
