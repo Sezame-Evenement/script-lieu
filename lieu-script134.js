@@ -226,7 +226,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateFirstDateInput(selectedDates, containerId) {
         console.log("Updating first date input for container: ", containerId);
-
+    
         let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
         const dateIndex = containerId === 'container1' ? 0 : 1;
         const selectedDate = selectedDates[dateIndex];
@@ -239,7 +239,7 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("First container date before updating firstdateinput:", formatDate(selectedDates[0]));
         // Update the console log to include the updated value of firstdateinput
         console.log("First date input value after updating:", $('.firstdateinput').val());
-        
+    
         // Clear selections for the date to handle deselection.
         dataToUpdate[formattedSelectedDate] = [];
     
@@ -267,6 +267,33 @@ document.addEventListener("DOMContentLoaded", function () {
     
         mergeDataAndUpdateInput();
     }
+    
+    function updateDateFullDisabled(selectedDates) {
+        console.log("Updating dateFullDisabledInput");
+        if (!dateFullDisabledInput) {
+            console.error('dateFullDisabledInput is not defined.');
+            return;
+        }
+    
+        console.log("Container 1 data:", container1Data);
+        console.log("Container 2 data:", container2Data);
+    
+        const updatedData = {};
+        Object.keys(container1Data).concat(Object.keys(container2Data)).forEach(date => {
+            const hours = [...(container1Data[date] || []), ...(container2Data[date] || [])];
+            if (hours.length > 0) {
+                updatedData[date] = hours;
+            }
+        });
+    
+        console.log("Updated data:", updatedData);
+    
+        dateFullDisabledInput.value = JSON.stringify(updatedData);
+        console.log("DateFullDisabledInput before updating:", dateFullDisabledInput.value);
+        // Add console log statements within the updateDateFullDisabled function to track its execution
+        console.log("Updated dateFullDisabledInput value:", dateFullDisabledInput.value);
+    }
+    
     
     
 
