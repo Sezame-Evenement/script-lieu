@@ -111,6 +111,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
     function handleTimeSlot(hour, date, data, selectedDate) {
       console.log("Handling time slot for hour", hour, "on date", date);
+      const currentlySelectedHours = new Set();
     
       // Track all selected hours as an array and sort them chronologically
       const selectedHours = Array.from(currentlySelectedHours).sort((a, b) => a - b);
