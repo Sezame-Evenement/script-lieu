@@ -137,61 +137,17 @@ document.addEventListener("DOMContentLoaded", function () {
     // This function encapsulates the logic for merging data and updating the input
     function mergeDataAndUpdateInput() {
         let mergedData = {};
-        // Merging container1Data and container2Data
+    
+        // Combine data from both containers
         Object.keys(container1Data).forEach(date => {
-            if (!mergedData[date]) mergedData[date] = [];
-            mergedData[date] = mergedData[date].concat(container1Data[date]);
+            mergedData[date] = [...(mergedData[date] || []), ...(container1Data[date] || [])];
         });
-    
         Object.keys(container2Data).forEach(date => {
-            if (!mergedData[date]) mergedData[date] = [];
-            mergedData[date] = mergedData[date].concat(container2Data[date]);
+            mergedData[date] = [...(mergedData[date] || []), ...(container2Data[date] || [])];
         });
     
-        // Ensure chronological order and handle date transitions
-        mergedData = handleDateTransitions(mergedData);
-    
-        // Update inputs
+        // Convert mergedData to the correct format for firstdateinput
         $('.firstdateinput').val(JSON.stringify(mergedData));
-        dateFullDisabledInput.value = JSON.stringify(mergedData);
-        console.log("Merged data:", mergedData);
-    }
-
-    function handleDateTransitions(mergedData) {
-        let adjustedData = {};
-    
-        // Sort dates to ensure chronological processing
-        const sortedDates = Object.keys(mergedData).sort();
-    
-        sortedDates.forEach((date, index) => {
-            // Ensure the current date is initialized in adjustedData
-            if (!adjustedData[date]) {
-                adjustedData[date] = [];
-            }
-    
-            // Copy current date's time ranges to adjustedData
-            adjustedData[date] = adjustedData[date].concat(mergedData[date]);
-    
-            // Check for day transition logic
-            if (index < sortedDates.length - 1) {
-                const nextDate = sortedDates[index + 1];
-                // Example check for "23h à 0h" - adjust according to your data format
-                if (mergedData[date].includes("23h à 0h") && !adjustedData[nextDate]) {
-                    adjustedData[nextDate] = [];
-                }
-                if (mergedData[date].includes("0h à 1h") && index > 0) {
-                    const prevDate = sortedDates[index - 1];
-                    if (!adjustedData[prevDate].includes("23h à 0h")) {
-                        // Adjust the previous date to include the transition
-                        adjustedData[prevDate].push("23h à 0h");
-                    }
-                }
-            }
-    
-            // Further adjustments for time transitions can be implemented here
-        });
-    
-        return adjustedData;
     }
     
     document.addEventListener('change', function(event) {
