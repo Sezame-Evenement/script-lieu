@@ -307,11 +307,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         console.log(`Data to update after handling ${containerId}:`, dataToUpdate);
     
-        // Update the input fields with the latest data
         updateDateFullDisabled();
         mergeDataAndUpdateInput();
     }
-    
     
     
     
