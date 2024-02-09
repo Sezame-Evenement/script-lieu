@@ -9,13 +9,12 @@ document.addEventListener("DOMContentLoaded", function () {
         disable: [function (date) {
             return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
         }],
-        onChange: function (selectedDates) {
+        onChange: function (selectedDates, dateStr) {
             console.log("Date selection changed", selectedDates);
             if (selectedDates.length > 0) {
                 initialSelectedDate = selectedDates[0];
                 $(".date-heading").eq(0).text(formatDate(selectedDates[0]));
-                updateCheckboxOptions(selectedDates, "container1");
-                updateMoreDaysButton(selectedDates);
+                updateCheckboxOptions(selectedDates[0], "container1");
             }
             if (secondContainerVisible) {
                 $(".checkbox-container").eq(1).hide();
@@ -24,12 +23,10 @@ document.addEventListener("DOMContentLoaded", function () {
             }
             if (selectedDates.length > 1) {
                 const secondDate = selectedDates[1];
-                const secondCheckboxContainer = $(".checkbox-container[data-id='container2']");
-                secondCheckboxContainer.html($(".checkbox-container[data-id='container1']").html());
-                updateCheckboxOptions([secondDate], "container2");
+                updateCheckboxOptions(secondDate, "container2");
                 $(".date-heading").eq(1).text(formatDate(secondDate));
                 $(".date-heading").eq(1).show();
-                secondCheckboxContainer.show();
+                $(".checkbox-container[data-id='container2']").show();
                 secondContainerVisible = true;
             }
             resetSelections();
@@ -203,42 +200,51 @@ document.addEventListener("DOMContentLoaded", function () {
         return date.toISOString().split('T')[0];
     }
 
-    function updateCheckboxOptions(selectedDates, containerId) {
+    function updateCheckboxOptions(selectedDate, containerId) {
+        console.log(`Updating checkbox options for ${containerId} with date:`, selectedDate);
         const openingHourStr = $('#ouverture-lieu').text();
-        const openingHour = parseInt(openingHourStr.split(/[:h]/)[0]);
+        const openingHour = parseInt(openingHourStr.split(/[:h]/)[0], 10);
         const closingHourStr = $('#fermeture-lieu').text();
-        const closingHour = parseInt(closingHourStr.split(/[:h]/)[0]);
+        const closingHour = parseInt(closingHourStr.split(/[:h]/)[0], 10);
         const disabledHoursElement = document.querySelector('.paragraph-dhours');
-        const disabledHoursText = disabledHoursElement.textContent.trim();
-        const disabledHours = parseJson(disabledHoursText) || {};
+        const disabledHoursText = disabledHoursElement ? disabledHoursElement.textContent.trim() : '{}';
+        const disabledHours = JSON.parse(disabledHoursText);
         const checkboxContainer = $(`.checkbox-container[data-id="${containerId}"]`);
         checkboxContainer.empty();
-        const upperLimitHour = (containerId === 'container2') ? closingHour : 24;
-        for (let hour = 0; hour < upperLimitHour; hour++) {
-            const isWithinRange = (closingHour > openingHour) ? (hour >= openingHour && hour < closingHour) : (hour >= openingHour || hour < closingHour);
-            if (isWithinRange) {
-                const isDisabled = selectedDates.some(selectedDate => {
-                    const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
-                    return (disabledHours[formattedSelectedDate] || [])
-                        .some(disabledHour => {
-                            const [start, end] = disabledHour.split(' à ');
-                            const [startHour] = start.split('h');
-                            const [endHour] = end.split('h');
-                            const selectedHour = parseInt(hour);
-                            return (startHour === '23' && endHour === '0' && (selectedHour === 23 || selectedHour === 0)) || (startHour !== '23' && selectedHour >= parseInt(startHour) && selectedHour < parseInt(endHour));
-                        });
-                });
-                const formattedHour = `${hour.toString().padStart(2, '0')}h00 à ${((hour + 1) % 24).toString().padStart(2, '0')}h00`;
-                const checkboxDiv = $("<div>", { class: "checkbox-item" });
-                const label = $("<label>", { text: formattedHour, for: `checkbox-${containerId}-${hour}`, style: isDisabled ? "color: #777; text-decoration: line-through; cursor: not-allowed;" : "" });
-                const checkbox = $("<input>", { type: "checkbox", value: `${hour}:00`, id: `checkbox-${containerId}-${hour}`, class: "checkbox-hour", disabled: isDisabled, name: `checkbox-${containerId}` });
-                checkboxDiv.append(label);
-                checkboxDiv.append(checkbox);
-                checkboxContainer.append(checkboxDiv);
-            }
+        const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
+    
+        // Determine the range of hours to generate checkboxes for
+        const hourRange = (containerId === 'container2' && closingHour < 24) ? closingHour : 24;
+    
+        for (let hour = openingHour; hour < hourRange; hour++) {
+            const hourString = `${hour.toString().padStart(2, '0')}h à ${(hour + 1).toString().padStart(2, '0')}h`;
+            const isDisabled = disabledHours[formattedSelectedDate] && disabledHours[formattedSelectedDate].includes(hourString);
+            const checkboxId = `checkbox-${containerId}-${hour}`;
+            const checkboxHtml = `
+                <div class="checkbox-item">
+                    <label for="${checkboxId}" ${isDisabled ? 'class="disabled"' : ''}>
+                        ${hourString}
+                        <input type="checkbox" id="${checkboxId}" class="checkbox-hour" value="${hour}" ${isDisabled ? 'disabled' : ''}>
+                    </label>
+                </div>
+            `;
+            checkboxContainer.append(checkboxHtml);
         }
+    
+        // Reattach event listeners to the newly added checkboxes
+        attachCheckboxListeners();
     }
+    
 
+    function attachCheckboxListeners() {
+        $('.checkbox-hour').off('change').on('change', function() {
+            console.log("Checkbox hour changed");
+            const containerId = $(this).closest('.checkbox-container').data('id');
+            const selectedDates = dateInput.selectedDates;
+            updateFirstDateInput(selectedDates, containerId);
+            processSelections();
+        });
+    }
 
     function updateMoreDaysButton(selectedDates) {
         console.log("Updating more days button state");
