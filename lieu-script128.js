@@ -148,7 +148,8 @@ document.addEventListener("DOMContentLoaded", function () {
         Object.keys(container2Data).forEach(date => {
             mergedData[date] = [...(mergedData[date] || []), ...(container2Data[date] || [])];
         });
-    
+        console.log("Merged data:", mergedData);
+
         // Convert mergedData to the correct format for firstdateinput
         $('.firstdateinput').val(JSON.stringify(mergedData));
         console.log("Merged data for firstdateinput:", $('.firstdateinput').val());
@@ -275,6 +276,9 @@ function removeTransitionalHours(dateStr, data) {
             return;
         }
     
+        console.log("Container 1 data:", container1Data);
+        console.log("Container 2 data:", container2Data);
+    
         const updatedData = {};
         Object.keys(container1Data).concat(Object.keys(container2Data)).forEach(date => {
             const hours = [...(container1Data[date] || []), ...(container2Data[date] || [])];
@@ -283,9 +287,12 @@ function removeTransitionalHours(dateStr, data) {
             }
         });
     
+        console.log("Updated data:", updatedData);
+    
         dateFullDisabledInput.value = JSON.stringify(updatedData);
         console.log("Updated dateFullDisabledInput:", dateFullDisabledInput.value);
     }
+    
     
     
     function hourToRangeString(hour) {
