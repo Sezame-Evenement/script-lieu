@@ -173,7 +173,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.addEventListener('change', function(event) {
         if ($(event.target).closest('.checkbox-container').length) {
             console.log("Checkbox change detected in container: ", $(event.target).closest('.checkbox-container').data('id'));
-
+    
             const selectedDates = dateInput.selectedDates;
             const containerId = $(event.target).closest('.checkbox-container').data('id');
             console.log(`Checkbox change detected in ${containerId}`);
@@ -190,18 +190,21 @@ document.addEventListener("DOMContentLoaded", function () {
             
             const checkboxValue = event.target.value;
             console.log("Selected checkbox value: ", checkboxValue);
-
+    
             console.log("Container 2 data before updating:", container2Data);
             console.log("Selected checkbox value for container 2:", $(event.target).val());
+    
             // Update the input for the first container
             updateFirstDateInput(selectedDates, containerId);
-            
+    
             // Update the disabled dates input
             updateDateFullDisabled(selectedDates);
+    
             console.log("Updated Container 2 data:", container2Data);
-
+    
         }
     });
+    
     
     // Additional helper functions like `hourToRangeString`, `adjustDateStr`, and `addTimeRange` need to be correctly defined
     // to support the logic in `updateContainerData` and other parts of the script.
