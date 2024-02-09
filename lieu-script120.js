@@ -85,7 +85,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     
     function processContainerSelections(containerId, dateStr) {
-        console.log(`Processing selections for ${containerId} on ${dateStr}`);
         let selectedHours = getSelectedHours(containerId);
         console.log(`Processing selections for ${containerId} on ${dateStr}: Selected hours:`, selectedHours);
 
@@ -107,8 +106,6 @@ document.addEventListener("DOMContentLoaded", function () {
     function adjustSelectionsForDayTransition(selectedHours, dateStr, containerId) {
         // Logic to add one hour before the first and after the last hour, considering day transition
         if (selectedHours.length > 0) {
-            console.log(`Adjusting selections for day transition in ${containerId}`);
-
             const firstHour = selectedHours[0];
             const lastHour = selectedHours[selectedHours.length - 1];
             addTimeRange(firstHour - 1, dateStr, containerId); // Adjust for previous day if hour is 0
@@ -118,11 +115,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
     
     function updateContainerData(containerId, dateStr, selectedHours) {
-        console.log(`Updating container data for ${containerId}`, selectedHours);
-
         let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
-        console.log(`Updating first date input for ${containerId}, selected dates: ${selectedDates.map(date => date.toLocaleDateString('fr-CA'))}`);
-
         // Reset the date's data before updating
         dataToUpdate[dateStr] = [];
         
@@ -159,15 +152,15 @@ document.addEventListener("DOMContentLoaded", function () {
         // Convert mergedData to the correct format for firstdateinput
         $('.firstdateinput').val(JSON.stringify(mergedData));
         console.log("Merged data for firstdateinput:", $('.firstdateinput').val());
-    console.log("Updated dateFullDisabledInput value:", $('#datefulldisabled').val());
+        console.log("Updated dateFullDisabledInput value:", $('#datefulldisabled').val());
     }
     
     document.addEventListener('change', function(event) {
         if ($(event.target).closest('.checkbox-container').length) {
-            const containerId = $(event.target).closest('.checkbox-container').data('id');
             console.log(`Checkbox change detected in ${containerId}`);
-            updateFirstDateInput(dateInput.selectedDates, containerId);
-            updateDateFullDisabled();
+            const selectedDates = dateInput.selectedDates;
+            updateFirstDateInput(selectedDates, $(event.target).closest('.checkbox-container').data('id'));
+            updateDateFullDisabled(selectedDates);
         }
     });
     
@@ -190,9 +183,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 function updateFirstDateInput(selectedDates, containerId) {
-    console.log(`Updating first date input for ${containerId}`);
-
     let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
+    console.log(`Updating first date input for ${containerId}, selected dates: ${selectedDates.map(date => date.toLocaleDateString('fr-CA'))}`);
+
     const dateIndex = containerId === 'container1' ? 0 : 1;
     const selectedDate = selectedDates[dateIndex];
     if (!selectedDate) return;
@@ -227,8 +220,6 @@ function updateFirstDateInput(selectedDates, containerId) {
 }
 
 function removeTransitionalHours(dateStr, data) {
-    console.log(`Removing transitional hours for date ${dateStr}`);
-
     // Remove 23h from the previous day and 0h from the next day if they exist as orphaned entries.
     const previousDayStr = adjustDateStr(dateStr, -1);
     const nextDayStr = adjustDateStr(dateStr, 1);
@@ -349,8 +340,6 @@ function removeTransitionalHours(dateStr, data) {
     }
 
     function mergeDataAndUpdateInput() {
-        console.log("Merging data from both containers", {container1Data, container2Data});
-
         let mergedData = {};
         const existingData = getExistingData();
         let allDates = new Set([...Object.keys(container1Data), ...Object.keys(container2Data), ...Object.keys(existingData)]);
@@ -370,8 +359,6 @@ function removeTransitionalHours(dateStr, data) {
         }
 
     $('.firstdateinput').val(JSON.stringify(mergedData));
-    console.log("Merged data", mergedData);
-
     }
 
     function getExistingData() {
