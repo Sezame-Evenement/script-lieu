@@ -345,14 +345,21 @@ function removeTransitionalHours(dateStr, data) {
     }
     
     function hourToRangeString(hour) {
+        // Check if the hour input is in the format "2:00" and extract only the hour part
+        if (typeof hour === 'string' && hour.includes(':')) {
+            hour = parseInt(hour.split(':')[0]);
+        }
+    
         if (isNaN(hour) || hour < 0 || hour > 23) {
             console.error("Invalid hour input for hourToRangeString:", hour);
             return "Invalid hour"; // or any other error handling
         }
+        
         let startHour = hour;
         let endHour = (hour + 1) % 24;
         return `${startHour}h à ${endHour}h`;
     }
+    
     
     
     
