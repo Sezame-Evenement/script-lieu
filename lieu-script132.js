@@ -142,21 +142,33 @@ document.addEventListener("DOMContentLoaded", function () {
     // This function encapsulates the logic for merging data and updating the input
     function mergeDataAndUpdateInput() {
         let mergedData = {};
+        const existingData = getExistingData();
+        let allDates = new Set([...Object.keys(container1Data), ...Object.keys(container2Data), ...Object.keys(existingData)]);
     
-        // Combine data from both containers
-        Object.keys(container1Data).forEach(date => {
-            mergedData[date] = [...(mergedData[date] || []), ...(container1Data[date] || [])];
+        console.log("Container 1 data:", container1Data);
+        console.log("Container 2 data:", container2Data);
+    
+        allDates.forEach(date => {
+            let dataFromContainer1 = container1Data[date] || [];
+            let dataFromContainer2 = container2Data[date] || [];
+            let existingDataForDate = existingData[date] || [];
+    
+            mergedData[date] = [...new Set([...dataFromContainer1, ...dataFromContainer2, ...existingDataForDate])];
         });
-        Object.keys(container2Data).forEach(date => {
-            mergedData[date] = [...(mergedData[date] || []), ...(container2Data[date] || [])];
-        });
-        console.log("Merged data:", mergedData);
-
-        // Convert mergedData to the correct format for firstdateinput
+    
+        for (let date in mergedData) {
+            if (mergedData[date].length === 0) {
+                delete mergedData[date];
+            }
+        }
+    
         $('.firstdateinput').val(JSON.stringify(mergedData));
         console.log("Merged data for firstdateinput:", $('.firstdateinput').val());
+    
+        $('#datefulldisabled').val(JSON.stringify(mergedData));
         console.log("Updated dateFullDisabledInput value:", $('#datefulldisabled').val());
     }
+    
     
     document.addEventListener('change', function(event) {
         if ($(event.target).closest('.checkbox-container').length) {
