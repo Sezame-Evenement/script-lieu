@@ -157,10 +157,24 @@ document.addEventListener("DOMContentLoaded", function () {
     
     document.addEventListener('change', function(event) {
         if ($(event.target).closest('.checkbox-container').length) {
-            const containerId = $(event.target).closest('.checkbox-container').data('id'); // Define containerId here
-            console.log(`Checkbox change detected in ${containerId}`);
             const selectedDates = dateInput.selectedDates;
+            const containerId = $(event.target).closest('.checkbox-container').data('id');
+            console.log(`Checkbox change detected in ${containerId}`);
+            
+            // Retrieve the date for the first container
+            const firstContainerDate = selectedDates[0];
+            
+            // Calculate the date for the second container (next day)
+            const secondContainerDate = new Date(firstContainerDate);
+            secondContainerDate.setDate(secondContainerDate.getDate() + 1);
+    
+            console.log("First container date:", formatDate(firstContainerDate));
+            console.log("Second container date:", formatDate(secondContainerDate));
+            
+            // Update the input for the first container
             updateFirstDateInput(selectedDates, containerId);
+            
+            // Update the disabled dates input
             updateDateFullDisabled(selectedDates);
         }
     });
@@ -183,42 +197,41 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-function updateFirstDateInput(selectedDates, containerId) {
-    let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
-    console.log(`Updating first date input for ${containerId}, selected dates: ${selectedDates.map(date => date.toLocaleDateString('fr-CA'))}`);
-
-    const dateIndex = containerId === 'container1' ? 0 : 1;
-    const selectedDate = selectedDates[dateIndex];
-    if (!selectedDate) return;
-
-    const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
-    let currentSelections = dataToUpdate[formattedSelectedDate] || [];
-
-    // Clear selections for the date to handle deselection.
-    dataToUpdate[formattedSelectedDate] = [];
-
-    // Fetch all hours currently selected in the UI for this date.
-    const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
-        .map(function() { return parseInt($(this).val().split(':')[0], 10); })
-        .get()
-        .sort((a, b) => a - b);
-
-    // Re-add selected hours, adjusting for added hours before the first and after the last selection.
-    selectedHours.forEach(hour => addTimeRange(hour, formattedSelectedDate, dataToUpdate));
-
-    // Add one hour before the first and after the last selection, if there are any selections.
-    if (selectedHours.length > 0) {
-        const firstHour = selectedHours[0];
-        const lastHour = selectedHours[selectedHours.length - 1];
-        addTimeRange(firstHour - 1, formattedSelectedDate, dataToUpdate);
-        addTimeRange(lastHour + 1, formattedSelectedDate, dataToUpdate);
-    } else {
-        // If no hours are currently selected, ensure transitional hours are removed.
-        removeTransitionalHours(formattedSelectedDate, dataToUpdate);
+    function updateFirstDateInput(selectedDates, containerId) {
+        let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
+        const dateIndex = containerId === 'container1' ? 0 : 1;
+        const selectedDate = selectedDates[dateIndex];
+        if (!selectedDate) return;
+    
+        const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
+        let currentSelections = dataToUpdate[formattedSelectedDate] || [];
+    
+        // Clear selections for the date to handle deselection.
+        dataToUpdate[formattedSelectedDate] = [];
+    
+        // Fetch all hours currently selected in the UI for this date.
+        const selectedHours = $(`.checkbox-container[data-id='${containerId}'] .checkbox-hour:checked`)
+            .map(function() { return parseInt($(this).val().split(':')[0], 10); })
+            .get()
+            .sort((a, b) => a - b);
+    
+        // Re-add selected hours, adjusting for added hours before the first and after the last selection.
+        selectedHours.forEach(hour => addTimeRange(hour, formattedSelectedDate, dataToUpdate));
+    
+        // Add one hour before the first and after the last selection, if there are any selections.
+        if (selectedHours.length > 0) {
+            const firstHour = selectedHours[0];
+            const lastHour = selectedHours[selectedHours.length - 1];
+            addTimeRange(firstHour - 1, formattedSelectedDate, dataToUpdate);
+            addTimeRange(lastHour + 1, formattedSelectedDate, dataToUpdate);
+        } else {
+            // If no hours are currently selected, ensure transitional hours are removed.
+            removeTransitionalHours(formattedSelectedDate, dataToUpdate);
+        }
+    
+        mergeDataAndUpdateInput();
     }
-
-    mergeDataAndUpdateInput();
-}
+    
 
 function removeTransitionalHours(dateStr, data) {
     // Remove 23h from the previous day and 0h from the next day if they exist as orphaned entries.
