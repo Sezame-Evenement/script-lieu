@@ -308,13 +308,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         console.log(`Data to update after handling ${containerId}:`, dataToUpdate);
     
-        // Update dateFullDisabledInput
-        updateDateFullDisabled();
-    
-        // Update the first date input
         mergeDataAndUpdateInput();
     }
-    
     
     
 
