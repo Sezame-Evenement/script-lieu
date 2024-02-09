@@ -218,24 +218,27 @@ document.addEventListener("DOMContentLoaded", function() {
           data[targetFormattedDate].push(range);
         }
       
+        handleEdgeCases(hour, date, data, selectedDate, isPrevDay, isNextDay);
+      }
+      
+      function handleEdgeCases(hour, date, data, selectedDate, isPrevDay, isNextDay) {
         if (isPrevDay && hour === 0) {
-          const previousDate = new Date(selectedDate);
-          previousDate.setDate(previousDate.getDate() - 1);
-          const previousFormattedDate = previousDate.toLocaleDateString('fr-CA');
-          const previousRange = '23h à 0h';
-          if (!data[previousFormattedDate].includes(previousRange)) {
-            data[previousFormattedDate].push(previousRange);
-          }
+          addTimeRangeIfNecessary(23, data, selectedDate, true);
+        } else if (isNextDay && hour === 23) {
+          addTimeRangeIfNecessary(0, data, selectedDate, false);
         }
       
-        if (isNextDay && hour === 23) {
-          const nextDate = new Date(selectedDate);
-          nextDate.setDate(nextDate.getDate() + 1);
-          const nextFormattedDate = nextDate.toLocaleDateString('fr-CA');
-          const nextRange = '0h à 1h';
-          if (!data[nextFormattedDate].includes(nextRange)) {
-            data[nextFormattedDate].push(nextRange);
+        if (isPrevDay || isNextDay) {
+          for (let i = hour + 1; i < 24; i++) {
+            addTimeRangeIfNecessary(i, data, selectedDate, isPrevDay);
           }
+        }
+      }
+      
+      function addTimeRangeIfNecessary(hour, data, selectedDate, isPrevDay) {
+        const formattedDate = selectedDate.toLocaleDateString('fr-CA');
+        if (!data[formattedDate].includes(`${hour}h à ${(hour + 1) % 24}h`)) {
+          addTimeRange(hour, selectedDate, data, isPrevDay);
         }
       }
 
