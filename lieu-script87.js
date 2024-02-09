@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", function () {
             nextDay.setDate(nextDay.getDate() + 1);
             processContainerSelections('container2', formatDate(nextDay));
         }
-        mergeDataAndUpdateInput(); // Combine data from both containers
+        mergeDataAndUpdateInput(); // Combine data from both containers and update inputs
     }
     
     function processContainerSelections(containerId, dateStr) {
@@ -139,24 +139,33 @@ document.addEventListener("DOMContentLoaded", function () {
     function mergeDataAndUpdateInput() {
         let mergedData = {};
     
+        console.log("[Debug] Merging container data into firstdateinput and datefulldisabled");
+    
         // Combine data from both containers
         Object.keys(container1Data).forEach(date => {
-            mergedData[date] = [...(mergedData[date] || []), ...(container1Data[date] || [])];
+            if (!mergedData[date]) mergedData[date] = [];
+            mergedData[date] = mergedData[date].concat(container1Data[date]);
         });
         Object.keys(container2Data).forEach(date => {
-            mergedData[date] = [...(mergedData[date] || []), ...(container2Data[date] || [])];
+            if (!mergedData[date]) mergedData[date] = [];
+            mergedData[date] = mergedData[date].concat(container2Data[date]);
         });
     
-        // Convert mergedData to the correct format for firstdateinput
+        console.log("[Debug] Merged Data:", mergedData);
+    
+        // Update `firstdateinput` and `datefulldisabled` inputs
         $('.firstdateinput').val(JSON.stringify(mergedData));
+        $('#datefulldisabled').val(JSON.stringify(mergedData)); // Assuming this needs the same format
+    
+        console.log("[Debug] Updated firstdateinput and datefulldisabled");
     }
+    
     
     document.addEventListener('change', function(event) {
         if ($(event.target).closest('.checkbox-container').length) {
-            console.log("Change detected in container: ", $(event.target).closest('.checkbox-container').data('id'));
-            const selectedDates = dateInput.selectedDates;
-            updateFirstDateInput(selectedDates, $(event.target).closest('.checkbox-container').data('id'));
-            updateDateFullDisabled(selectedDates);
+            const containerId = $(event.target).closest('.checkbox-container').data('id');
+            console.log("[Debug] Change detected in container:", containerId);
+            processSelections();
         }
     });
     
