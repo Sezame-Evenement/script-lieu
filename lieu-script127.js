@@ -204,6 +204,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateFirstDateInput(selectedDates, containerId) {
+        console.log("Updating first date input for container: ", containerId);
+
         let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
         const dateIndex = containerId === 'container1' ? 0 : 1;
         const selectedDate = selectedDates[dateIndex];
@@ -267,6 +269,7 @@ function removeTransitionalHours(dateStr, data) {
     
     
     function updateDateFullDisabled() {
+        console.log("Updating dateFullDisabledInput");
         if (!dateFullDisabledInput) {
             console.error('dateFullDisabledInput is not defined.');
             return;
@@ -283,6 +286,7 @@ function removeTransitionalHours(dateStr, data) {
         dateFullDisabledInput.value = JSON.stringify(updatedData);
         console.log("Updated dateFullDisabledInput:", dateFullDisabledInput.value);
     }
+    
     
     function hourToRangeString(hour) {
         let startHour = hour % 24;
