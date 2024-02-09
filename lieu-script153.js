@@ -108,11 +108,8 @@ function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, 
   const isSelected = currentlySelectedHours.has(hour);
   const wasSelected = previouslySelectedHours.has(hour);
 
-  // Track all selected hours as an array
-  const selectedHours = Array.from(currentlySelectedHours);
-
-  // Sort selected hours chronologically
-  selectedHours.sort((a, b) => a - b);
+  // Track all selected hours as an array and sort them chronologically
+  const selectedHours = Array.from(currentlySelectedHours).sort((a, b) => a - b);
 
   // Calculate adjacent hours considering edge cases
   const hourBefore = (hour + 23) % 24;
@@ -148,8 +145,8 @@ function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, 
     removeTimeRange(hour, date, data, selectedDate);
 
     // Remove hour before only if it was added due to the previous selection
-    if (previouslySelectedHours.has(hourBefore) && 
-        !currentlySelectedHours.has(hourBefore) && 
+    if (previouslySelectedHours.has(hourBefore) &&
+        !currentlySelectedHours.has(hourBefore) &&
         (hourBefore === selectedHours[0] || hourBefore > selectedHours[selectedHours.length - 1])) {
       // Handle edge case: remove from previous day
       if (hourBefore === selectedHours[0] && hourBefore > selectedHours[selectedHours.length - 1]) {
@@ -162,8 +159,8 @@ function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, 
     }
 
     // Remove hour after only if it was added due to the previous selection
-    if (previouslySelectedHours.has(hourAfter) && 
-        !currentlySelectedHours.has(hourAfter) && 
+    if (previouslySelectedHours.has(hourAfter) &&
+        !currentlySelectedHours.has(hourAfter) &&
         (hourAfter === selectedHours[selectedHours.length - 1] || hourAfter < selectedHours[0])) {
       // Handle edge case: remove from next day
       if (hourAfter === selectedHours[selectedHours.length - 1] && hourAfter < selectedHours[0]) {
@@ -190,6 +187,7 @@ function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, 
   }
   data[date] = Array.from(uniqueRanges);
 }
+
 
   
   
