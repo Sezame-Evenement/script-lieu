@@ -192,15 +192,20 @@ function addTimeRange(hour, date, data, selectedDate) {
   if (!data[selectedDate]) {
       data[selectedDate] = [];
   }
-  const formattedHour = hour < 10 ? `0${hour}` : hour;
+
+  // Adjust formatting to remove leading zeros
+  const formattedHour = hour < 10 ? `${hour}` : `${hour}`;
   const nextHour = (hour + 1) % 24;
-  const formattedNextHour = nextHour < 10 ? `0${nextHour}` : nextHour;
+  const formattedNextHour = nextHour < 10 ? `${nextHour}` : `${nextHour}`;
+
+  // Construct the time range string without leading zeros
   const timeRange = `${formattedHour}h à ${formattedNextHour}h`;
 
   if (!data[selectedDate].includes(timeRange)) {
       data[selectedDate].push(timeRange);
   }
 }
+
 
 
     
