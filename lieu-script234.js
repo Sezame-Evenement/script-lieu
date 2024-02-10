@@ -164,9 +164,11 @@ document.addEventListener("DOMContentLoaded", function() {
         const firstHour = selectedHours[0];
         const lastHour = selectedHours[selectedHours.length - 1];
     
-        // Add the hour before
-        if (!currentlySelectedHours.has(firstHour - 1 % 24)) {
-          addTimeRange(firstHour - 1 % 24, date, data, selectedDate);
+    
+        for (const adjacentHour of [firstHour - 1 % 24, lastHour + 1 % 24]) {
+          if (!currentlySelectedHours.has(adjacentHour)) {
+            addTimeRange(adjacentHour, date, data, selectedDate);
+          }
         }
     
         // Add the hour after
