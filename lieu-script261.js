@@ -117,6 +117,9 @@ document.addEventListener("DOMContentLoaded", function() {
     return [(hour - 1 + 24) % 24, (hour + 1) % 24];
   }
   
+  console.log("Selected date before handling time slot:", selectedDate.toLocaleDateString('fr-CA'));
+
+
   function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
 
 
