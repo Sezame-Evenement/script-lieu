@@ -248,11 +248,11 @@ function removeTimeRange(hour, date, data, selectedDate) {
     targetDate = adjustDateForHour(hour, targetDate);
 
     // Only proceed with removal if the hour is not adjacent to selected hours
-    if (!isAdjacentToSelected(hour, data, targetDate)) {
-        console.log(`Removing time range for hour ${hour} on date ${targetDate.toISOString().split('T')[0]}`);
-        removeRangeFromData(hour, targetDate, data);
+    if (targetDate.getDate() !== selectedDate.getDate() && !isAdjacentToSelected(hour, data, targetDate)) {
+      console.log(`Removing time range for hour ${hour} on date ${targetDate.toISOString().split('T')[0]}`);
+      removeRangeFromData(hour, targetDate, data);
     } else {
-        console.log(`Skipping removal of adjacent hour ${hour} on date ${targetDate.toISOString().split('T')[0]}`);
+      console.log(`Skipping removal of hour ${hour} on date ${targetDate.toISOString().split('T')[0]}`);
     }
 }
 
