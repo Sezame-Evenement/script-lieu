@@ -123,27 +123,32 @@ document.addEventListener("DOMContentLoaded", function() {
     console.log("- previouslySelectedHours:", Array.from(previouslySelectedHours));
     console.log("------------------");
   
+    // Initialize data[selectedDate] if it does not exist
+    if (!data[selectedDate]) {
+        data[selectedDate] = [];
+    }
+
     const isSelected = currentlySelectedHours.has(hour);
-    // Remove wasSelected check, as logic is streamlined for current selections
-  
+
     // Update all selected hours and sort them
     const selectedHours = Array.from(currentlySelectedHours).sort((a, b) => a - b);
   
     // Determine adjacent hours for the whole selection, not just the current hour
     if (isSelected) {
-      // Add the current hour if not previously selected
-      if (!previouslySelectedHours.has(hour)) {
-        addTimeRange(hour, date, data, selectedDate);
-      }
-  
-      // Calculate and manage adjacent hours for the updated selection
-      manageAdjacentHours(selectedHours, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours);
+        // Add the current hour if not previously selected
+        if (!previouslySelectedHours.has(hour)) {
+            addTimeRange(hour, date, data, selectedDate);
+        }
+
+        // Calculate and manage adjacent hours for the updated selection
+        manageAdjacentHours(selectedHours, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours);
     } else {
-      // Handle deselection
-      removeTimeRange(hour, date, data, selectedDate);
-      manageAdjacentHours(selectedHours, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours, true);
+        // Handle deselection
+        removeTimeRange(hour, date, data, selectedDate);
+        manageAdjacentHours(selectedHours, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours, true);
     }
-  }
+}
+
   
   function manageAdjacentHours(selectedHours, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours, isDeselection = false) {
     // This function will add or remove adjacent hours based on the entire selection.
