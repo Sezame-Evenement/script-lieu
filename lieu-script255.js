@@ -219,17 +219,17 @@ function addTimeRange(hour, date, data, selectedDate) {
 
     
     function handleEdgeCases(hour, date, data, selectedDate, isPrevDay, isNextDay) {
-      if (isPrevDay && hour === 0) {
-        // Check if the previous hour was actually selected before adding it
-        if (selectedDate.getDate() > 1 && data[formatDateKey(new Date(date.getTime() - 24 * 60 * 60 * 1000))].includes(`${23}h à ${0}h`)) {
-          addTimeRangeIfNecessary(23, data, selectedDate, true);
-        }
-      } else if (isNextDay && hour === 23) {
-        // Check if the next hour was actually selected before adding it
-        if (data[formatDateKey(new Date(date.getTime() + 24 * 60 * 60 * 1000))].includes(`${0}h à ${1}h`)) {
-          addTimeRangeIfNecessary(0, data, selectedDate, false);
-        }
-      }
+     if (isPrevDay && hour === 0) {
+    // Check if the previous hour was actually selected before adding it
+    if (selectedDate.getDate() > 1 && data[formatDateKey(new Date(date.getTime() - 24 * 60 * 60 * 1000))].includes(`${23}h à ${0}h`)) {
+      addTimeRangeIfNecessary(23, data, selectedDate, true);
+    }
+  } else if (isNextDay && hour === 23) {
+    // Check if the next hour was actually selected before adding it
+    if (data[formatDateKey(new Date(date.getTime() + 24 * 60 * 60 * 1000))].includes(`${0}h à ${1}h`)) {
+      addTimeRangeIfNecessary(0, data, selectedDate, false);
+    }
+  }
     }
     
     function addTimeRangeIfNecessary(hour, data, selectedDate, isPrevDay) {
@@ -239,6 +239,14 @@ function addTimeRange(hour, date, data, selectedDate) {
       }
     }
 function removeTimeRange(hour, date, data, selectedDate) {
+  let convertedDate = new Date(date);
+
+if (convertedDate instanceof Date) {
+  // Proceed with your original code using convertedDate instead of date
+  removeTimeRange(hour, convertedDate, data, selectedDate);
+} else {
+  console.error("Failed to convert date. Check the format and value of 'date'.");
+}
     console.log(`Attempting to remove time range for hour ${hour} on date ${date}`);
 
     // Convert the selectedDate string to a Date object if it's not already one
