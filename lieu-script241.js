@@ -263,9 +263,8 @@ function addTimeRange(hour, date, data, selectedDate) {
     
   
     function adjustDateForHour(hour, date) {
-      if (typeof date !== 'object' || !(date instanceof Date)) {
-        throw new Error('Invalid date argument provided'); // Or handle it differently
-      }
+      console.log(`Date before getTime():`, date);
+
       const newDate = new Date(date.getTime()); // Create new Date object first
     
       if (hour < 0) {
