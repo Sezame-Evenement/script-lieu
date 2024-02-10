@@ -107,39 +107,38 @@ document.addEventListener("DOMContentLoaded", function() {
     function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
       const isSelected = currentlySelectedHours.has(hour);
       const wasSelected = previouslySelectedHours.has(hour);
+      const sortedSelectedHours = Array.from(currentlySelectedHours).sort((a, b) => a - b);
   
-      // Adjust hour for day boundaries
-      let adjustedHour = hour;
-      let adjustedDate = new Date(date);
-      if (hour < 0) {
-          adjustedHour = 23;
-          adjustedDate.setDate(adjustedDate.getDate() - 1);
-      } else if (hour > 23) {
-          adjustedHour = 0;
-          adjustedDate.setDate(adjustedDate.getDate() + 1);
+      // Adding new selection
+      if (isSelected && !wasSelected) {
+          console.log(`Adding selected hour: ${hour}`);
+          addTimeRange(hour, date, data, selectedDate);
+  
+          // Check if this is the new first or last hour in the range
+          if (hour < sortedSelectedHours[0] || sortedSelectedHours.length === 0) {
+              // Add hour before the first selected hour
+              console.log(`Adding adjacent hour before: ${hour - 1}`);
+              addTimeRange(hour - 1, date, data, selectedDate, true, false);
+          }
+          if (hour > sortedSelectedHours[sortedSelectedHours.length - 1]) {
+              // Add hour after the last selected hour
+              console.log(`Adding adjacent hour after: ${hour + 1}`);
+              addTimeRange(hour + 1, date, data, selectedDate, false, true);
+          }
       }
   
-      // Convert adjusted date back to string format for consistency
-      const formattedAdjustedDate = adjustedDate.toLocaleDateString('fr-CA');
+      // Removing a selection
+      else if (!isSelected && wasSelected) {
+          console.log(`Removing selected hour: ${hour}`);
+          removeTimeRange(hour, date, data, selectedDate);
   
-      if (isSelected && !wasSelected) {
-          // Adding new selection
-          console.log(`Adding selected hour: ${hour} to ${formattedAdjustedDate}`);
-          addTimeRange(adjustedHour, formattedAdjustedDate, data, selectedDate);
-          
-          // Handle adding adjacent hours if this is the start or end of a new continuous range
-          // This part needs custom logic based on your range management strategy
-          
-      } else if (!isSelected && wasSelected) {
-          // Removing a selection
-          console.log(`Removing selected hour: ${hour} from ${formattedAdjustedDate}`);
-          removeTimeRange(adjustedHour, formattedAdjustedDate, data, selectedDate);
-  
-          // If deselection breaks a continuous range, adjust adjacent hours accordingly
-          // This requires identifying the start and end of the continuous range
-          // and potentially removing adjacent hours if they were automatically added
+          // Adjust logic for removing adjacent hours if necessary
+          // This simplified example doesn't handle removing adjacent hours upon deselection
       }
   }
+  
+  // Adjust the addTimeRange and removeTimeRange functions as necessary to support adding/removing adjacent hours.
+  // Ensure they correctly handle edge cases (e.g., hours < 0 or > 23) and adjust the date accordingly.
   
     
     
