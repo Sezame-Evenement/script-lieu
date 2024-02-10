@@ -264,6 +264,9 @@ function addTimeRange(hour, date, data, selectedDate) {
   
     function adjustDateForHour(hour, date) {
       console.log(`Date before getTime():`, date);
+      if (typeof date === 'string') {
+        date = new Date(date);
+      }
 
       const newDate = new Date(date.getTime()); // Create new Date object first
     
