@@ -116,67 +116,56 @@ document.addEventListener("DOMContentLoaded", function() {
     console.log("------------------");
     console.log("Parameters:");
     console.log(`- hour: ${hour}`);
-    console.log(`- date: ${date}`);
+    console.log(`- date: ${formatDateToISO(date)}`); // Adjusted to use a consistent date format
     console.log("- data: ", data);
-    console.log(`- selectedDate: ${selectedDate}`);
+    console.log(`- selectedDate: ${formatDateToISO(selectedDate)}`); // Adjusted to use a consistent date format
     console.log("- currentlySelectedHours:", Array.from(currentlySelectedHours));
     console.log("- previouslySelectedHours:", Array.from(previouslySelectedHours));
     console.log("------------------");
   
     const isSelected = currentlySelectedHours.has(hour);
-    // Remove wasSelected check, as logic is streamlined for current selections
-  
-    // Update all selected hours and sort them
     const selectedHours = Array.from(currentlySelectedHours).sort((a, b) => a - b);
   
-    // Determine adjacent hours for the whole selection, not just the current hour
     if (isSelected) {
-      // Add the current hour if not previously selected
       if (!previouslySelectedHours.has(hour)) {
-        addTimeRange(hour, date, data, selectedDate);
+        addTimeRange(hour, formatDateToISO(selectedDate), data); // Adjusted to ensure consistent date format
       }
-  
-      // Calculate and manage adjacent hours for the updated selection
-      manageAdjacentHours(selectedHours, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours);
+      manageAdjacentHours(selectedHours, formatDateToISO(selectedDate), data, selectedDate, currentlySelectedHours, previouslySelectedHours); // Adjusted date format
     } else {
-      // Handle deselection
-      removeTimeRange(hour, date, data, selectedDate);
-      manageAdjacentHours(selectedHours, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours, true);
+      removeTimeRange(hour, formatDateToISO(selectedDate), data); // Adjusted to ensure consistent date format
+      manageAdjacentHours(selectedHours, formatDateToISO(selectedDate), data, selectedDate, currentlySelectedHours, previouslySelectedHours, true); // Adjusted date format
     }
   }
   
   function manageAdjacentHours(selectedHours, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours, isDeselection = false) {
-    // This function will add or remove adjacent hours based on the entire selection.
-    // The logic for calculating which adjacent hours to add or remove should consider the
-    // start and end of the selectedHours array and handle edge cases like day transitions.
-  
     if (selectedHours.length > 0) {
       const firstHour = selectedHours[0];
       const lastHour = selectedHours[selectedHours.length - 1];
       const [firstHourBefore] = getAdjacentHours(firstHour);
       const [, lastHourAfter] = getAdjacentHours(lastHour);
   
-      // When selecting, add adjacent hours if they're not already included
       if (!isDeselection) {
         if (!currentlySelectedHours.has(firstHourBefore)) {
-          addTimeRange(firstHourBefore, date, data, selectedDate);
+          addTimeRange(firstHourBefore, date, data);
         }
         if (!currentlySelectedHours.has(lastHourAfter)) {
-          addTimeRange(lastHourAfter, date, data, selectedDate);
+          addTimeRange(lastHourAfter, date, data);
         }
       } else {
-        // When deselecting, remove adjacent hours if they were not part of the original selection
         if (!previouslySelectedHours.has(firstHourBefore) && currentlySelectedHours.has(firstHourBefore)) {
-          removeTimeRange(firstHourBefore, date, data, selectedDate);
+          removeTimeRange(firstHourBefore, date, data);
         }
         if (!previouslySelectedHours.has(lastHourAfter) && currentlySelectedHours.has(lastHourAfter)) {
-          removeTimeRange(lastHourAfter, date, data, selectedDate);
+          removeTimeRange(lastHourAfter, date, data);
         }
       }
     }
   }
   
-  // Ensure addTimeRange and removeTimeRange are properly implemented to handle adding and removing time ranges.
+  function formatDateToISO(date) {
+    return date.toISOString().split('T')[0]; // Convert date to YYYY-MM-DD format
+  }
+  
   
 
 
