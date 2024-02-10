@@ -241,25 +241,22 @@ function addTimeRange(hour, date, data, selectedDate) {
 
     function removeTimeRange(hour, date, data, selectedDate, isPrevDay = false, isNextDay = false) {
       console.log(`Removing time range for hour ${hour} on date ${date}`);
-    
-      const rangeDate = adjustDateForHour(hour, selectedDate); // Adjust date based on hour
-    
-      if (rangeDate.getTime() !== selectedDate.getTime()) {
-        return; // Skip removal if date doesn't match selectedDate
-      }
-    
-      removeRangeFromData(hour, rangeDate, data);
-    
-      if (hour === 0) {
-        let prevDate = new Date(selectedDate);
-        prevDate.setDate(prevDate.getDate() - 1);
-        removeRangeFromData(23, prevDate, data);
-      } else if (hour === 23) {
-        let nextDate = new Date(selectedDate);
-        nextDate.setDate(nextDate.getDate() + 1);
-        removeRangeFromData(0, nextDate, data);
-      }
-    }
+
+
+let targetDate = new Date(selectedDate);
+targetDate = adjustDateForHour(hour, targetDate);
+removeRangeFromData(hour, targetDate, data);
+
+if (hour === 0) {
+let prevDate = new Date(selectedDate);
+prevDate.setDate(prevDate.getDate() - 1);
+removeRangeFromData(23, prevDate, data);
+} else if (hour === 23) {
+let nextDate = new Date(selectedDate);
+nextDate.setDate(nextDate.getDate() + 1);
+removeRangeFromData(0, nextDate, data);
+}
+}
     
   
   function adjustDateForHour(hour, date) {
