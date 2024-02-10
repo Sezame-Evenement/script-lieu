@@ -114,21 +114,21 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     const hourInt = parseInt(hour, 10);
+    // Adjust the array to include only the selected hour and its immediate adjacent hours
     const hoursToAdd = [
-        hourInt - 1 < 0 ? 23 : hourInt - 1,
+        hourInt === 0 ? 23 : hourInt - 1,
         hourInt,
-        hourInt + 1 > 23 ? 0 : hourInt + 1
+        hourInt === 23 ? 0 : hourInt + 1
     ];
 
     hoursToAdd.forEach(h => {
-        const formattedHour = h;
-        const formattedNextHour = (h + 1) % 24;
-        const timeRange = `${formattedHour}h à ${formattedNextHour}h`;
+        const timeRange = `${h}h à ${(h + 1) % 24}h`;
         if (!data[selectedDate].includes(timeRange)) {
             data[selectedDate].push(timeRange);
         }
     });
 }
+
 
 
 
