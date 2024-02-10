@@ -114,25 +114,43 @@ document.addEventListener("DOMContentLoaded", function() {
     const wasSelected = previouslySelectedHours.has(hour);
     const allSelectedHours = new Set([...currentlySelectedHours, ...previouslySelectedHours]);
   
-    // Adjusted logic for determining adjacency
-    const getAdjacentHours = hour => [(hour + 23) % 24, (hour + 1) % 24];
+    // Adjust hours for edge cases (0h or 23h)
+    const adjustedHour = hour % 24;
+    const adjacentHours = getAdjacentHours(adjustedHour);
+  
+    // Check for continuous range and merge if necessary
+    const existingRanges = data[date] || [];
+    const existingRangesAsHours = existingRanges.flatMap(range => {
+      const [startHour, endHour] = range.split('h');
+      return [parseInt(startHour), parseInt(endHour)];
+    });
+    const continuousRange = existingRangesAsHours.some(existingHour => adjacentHours.includes(existingHour));
   
     if (isSelected && !wasSelected) {
-      addTimeRange(hour, date, data, selectedDate);
-      const adjacentHours = getAdjacentHours(hour);
+      // If continuous, expand existing range
+      if (continuousRange) {
+        const rangeToExpand = existingRanges.find(range => adjacentHours.some(hour => range.includes(`${hour}h`)));
+        const [startHour, endHour] = rangeToExpand.split('h');
+        const expandedStartHour = Math.min(adjustedHour, parseInt(startHour));
+        const expandedEndHour = Math.max(adjustedHour + 1, parseInt(endHour));
+        const expandedRange = `${expandedStartHour}h à ${expandedEndHour}h`;
+        data[date] = data[date].filter(range => range !== rangeToExpand);
+        data[date].push(expandedRange);
+      } else {
+        // Otherwise, add new range and adjacent hours
+        addTimeRange(adjustedHour, date, data, selectedDate);
+        adjacentHours.forEach(adjacentHour => {
+          if (!allSelectedHours.has(adjacentHour)) {
+            addTimeRange(adjacentHour, date, data, selectedDate);
+          }
+        });
+      }
+    } else if (!isSelected && wasSelected) {
+      // Remove time range and adjust adjacent hours as needed
+      removeTimeRange(adjustedHour, date, data, selectedDate);
       adjacentHours.forEach(adjacentHour => {
         if (!allSelectedHours.has(adjacentHour)) {
-          addTimeRange(adjacentHour, date, data, selectedDate);
-        }
-      });
-    } else if (!isSelected && wasSelected) {
-      // Deselection may require more nuanced handling
-      removeTimeRange(hour, date, data, selectedDate);
-      // Check if adjacent hours should remain
-      getAdjacentHours(hour).forEach(adjacentHour => {
-        if (allSelectedHours.has(adjacentHour)) {
-          const furtherAdjacentHours = getAdjacentHours(adjacentHour).filter(h => h !== hour);
-          const shouldKeep = furtherAdjacentHours.some(furtherAdjacentHour => currentlySelectedHours.has(furtherAdjacentHour));
+          const shouldKeep = adjacentHours.some(furtherAdjacentHour => currentlySelectedHours.has(furtherAdjacentHour));
           if (!shouldKeep) {
             removeTimeRange(adjacentHour, date, data, selectedDate);
           }
@@ -140,6 +158,7 @@ document.addEventListener("DOMContentLoaded", function() {
       });
     }
   }
+  
   
   
 
@@ -151,27 +170,7 @@ function getAdjacentHours(hour) {
 }
   
     
-function updateAdjacentHours(currentlySelectedHours, dataToUpdate, formattedSelectedDate) {
-  const hoursArray = Array.from(currentlySelectedHours).sort((a, b) => a - b);
-  for (let i = 0; i < hoursArray.length; i++) {
-      let currentHour = hoursArray[i];
-      // Check if the hour before is missing
-      if (i === 0 || hoursArray[i - 1] !== currentHour - 1) {
-          const hourBefore = (currentHour + 23) % 24;
-          if (!currentlySelectedHours.has(hourBefore)) {
-              addTimeRange(hourBefore, formattedSelectedDate, dataToUpdate, true);
-          }
-      }
-      // Check if the hour after is missing
-      if (i === hoursArray.length - 1 || hoursArray[i + 1] !== currentHour + 1) {
-          const hourAfter = (currentHour + 1) % 24;
-          if (!currentlySelectedHours.has(hourAfter)) {
-              addTimeRange(hourAfter, formattedSelectedDate, dataToUpdate, false);
-          }
-      }
-  }
-}
-
+    
   
   
   
