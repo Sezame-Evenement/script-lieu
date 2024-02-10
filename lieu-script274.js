@@ -103,24 +103,29 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     
     
-    
     function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
         const isSelected = currentlySelectedHours.has(hour);
         const wasSelected = previouslySelectedHours.has(hour);
     
-        // If the hour is currently selected but was not previously selected, it's a new selection.
         if (isSelected && !wasSelected) {
             console.log(`Selecting new hour: ${hour}. Adding time range.`);
-            addTimeRange(hour, date, data, selectedDate);
-            // Optionally, add logic here to add adjacent hours if necessary.
-        }
-        // If the hour was previously selected but is not currently selected, it's being deselected.
-        else if (!isSelected && wasSelected) {
-            console.log(`Deselecting hour: ${hour}. Removing time range.`);
-            removeTimeRange(hour, date, data, selectedDate);
-            // Optionally, add logic here to remove adjacent hours if necessary.
+            addTimeRange(hour, date, data, selectedDate); // Add the directly selected range
+    
+            // Add an hour before if it's a new selection and not already covered
+            if (!currentlySelectedHours.has(hour - 1) && !previouslySelectedHours.has(hour - 1) && hour > 0) { // Check for lower bound
+                console.log(`Adding adjacent hour before: ${hour - 1}`);
+                addTimeRange(hour - 1, date, data, selectedDate);
+            }
+    
+            // Add an hour after if it's a new selection and not already covered
+            if (!currentlySelectedHours.has(hour + 1) && !previouslySelectedHours.has(hour + 1) && hour < 23) { // Check for upper bound
+                console.log(`Adding adjacent hour after: ${hour + 1}`);
+                addTimeRange(hour + 1, date, data, selectedDate);
+            }
         }
     }
+    
+    
     
     
     
