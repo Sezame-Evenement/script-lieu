@@ -247,12 +247,16 @@ function removeTimeRange(hour, date, data, selectedDate) {
     // Adjust targetDate based on the hour, considering overflow into the next or previous day
     targetDate = adjustDateForHour(hour, targetDate);
 
-    // Only proceed with removal if the hour is not adjacent to selected hours
-    if (targetDate.getDate() !== selectedDate.getDate() && !isAdjacentToSelected(hour, data, targetDate)) {
-      console.log(`Removing time range for hour ${hour} on date ${targetDate.toISOString().split('T')[0]}`);
-      removeRangeFromData(hour, targetDate, data);
+    if (data[formatDateKey(selectedDate)] && data[formatDateKey(targetDate)]) {
+      // Only proceed with removal if the hour is not on the previous day and not adjacent to selected hours
+      if (!isAdjacentToSelected(hour, data, targetDate)) {
+        console.log(`Removing time range for hour ${hour} on date ${targetDate.toISOString().split('T')[0]}`);
+        removeRangeFromData(hour, targetDate, data);
+      } else {
+        console.log(`Skipping removal of hour ${hour} on date ${targetDate.toISOString().split('T')[0]}`);
+      }
     } else {
-      console.log(`Skipping removal of hour ${hour} on date ${targetDate.toISOString().split('T')[0]}`);
+      console.log(`Data not available for ${targetDate.toISOString().split('T')[0]}. Skipping removal.`);
     }
 }
 
