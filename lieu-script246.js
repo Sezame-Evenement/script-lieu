@@ -298,6 +298,37 @@ function addTimeRange(hour, date, data, selectedDate) {
       // Check if either the previous or next hour range exists in the data
       return hourRanges.includes(previousHourRange) || hourRanges.includes(nextHourRange);
   }
+
+  function handleDeselection(hour, date, data) {
+    // Convert the date to a consistent format for key lookup
+    let targetDate = (typeof date === 'string') ? new Date(date) : new Date(date.getTime());
+    const formattedDate = formatDateKey(targetDate);
+
+    // Directly remove the deselected range
+    removeRangeFromData(hour, targetDate, data);
+
+    // Evaluate the necessity of adjacent hours
+    if (!hasSelectedAdjacent(hour, data, formattedDate)) {
+        // If no adjacent selected hours, remove the adjacent hours as well
+        removeAdjacentHours(hour, targetDate, data);
+    }
+}
+
+function hasSelectedAdjacent(hour, data, formattedDate) {
+    // Check if there are any remaining selected hours adjacent to the given hour
+    const adjacentHours = [hour - 1, hour + 1].map(h => formatTimeRange(h % 24));
+    return adjacentHours.some(range => data[formattedDate]?.includes(range));
+}
+
+function removeAdjacentHours(hour, date, data) {
+    // Adjust for each adjacent hour if they are not part of a larger selected range
+    [hour - 1, hour + 1].forEach(adjacentHour => {
+        if (!isAdjacentToSelected(adjacentHour, data, date)) {
+            removeRangeFromData(adjacentHour, date, data);
+        }
+    });
+}
+
   
 
 
