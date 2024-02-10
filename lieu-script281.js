@@ -103,31 +103,36 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     
     
-    
     function handleTimeSlot(hour, formattedDate, dataToUpdate, selectedDate, currentlySelectedHours, previouslySelectedHours) {
       const isSelected = currentlySelectedHours.has(hour);
       const wasSelected = previouslySelectedHours.has(hour);
-      let sortedSelectedHours = Array.from(currentlySelectedHours).sort((a, b) => a - b);
+      const sortedSelectedHours = Array.from(currentlySelectedHours).sort((a, b) => a - b);
+  
+      console.log(`Handling time slot for hour: ${hour}, isSelected: ${isSelected}, wasSelected: ${wasSelected}`);
   
       if (isSelected && !wasSelected) {
-          // Add selected hour and potentially adjacent hours for new selections
+          console.log(`Adding new selection for hour: ${hour}`);
           addTimeRange(hour, formattedDate, dataToUpdate, selectedDate);
-          // Logic for adding adjacent hours remains as previously defined
+  
+          // Determine if this is the new first or last hour in the range and add adjacent hours accordingly
+          if (hour <= sortedSelectedHours[0] || sortedSelectedHours.length === 0) {
+              // This is the new first hour in the selection or the only hour, add hour before
+              const adjBefore = hour - 1;
+              console.log(`Adding adjacent hour before the first selected hour: ${adjBefore}`);
+              addTimeRange(adjBefore, formattedDate, dataToUpdate, selectedDate);
+          }
+          if (hour >= sortedSelectedHours[sortedSelectedHours.length - 1]) {
+              // This is the new last hour in the selection, add hour after
+              const adjAfter = hour + 1;
+              console.log(`Adding adjacent hour after the last selected hour: ${adjAfter}`);
+              addTimeRange(adjAfter, formattedDate, dataToUpdate, selectedDate);
+          }
       } else if (!isSelected && wasSelected) {
-          // Direct deselection of an hour
+          console.log(`Removing selection for hour: ${hour}`);
           removeTimeRange(hour, formattedDate, dataToUpdate, selectedDate);
   
-          // Adjust adjacent hours if the deselected hour is at the start or end of a range
-          sortedSelectedHours = Array.from(currentlySelectedHours).sort((a, b) => a - b); // Refresh after modification
-          const isFirstHour = hour === sortedSelectedHours[0];
-          const isLastHour = hour === sortedSelectedHours[sortedSelectedHours.length - 1];
-          
-          if (isFirstHour || isLastHour) {
-              // Remove adjacent hour if this was the first or last in a selection range
-              const adjacentHour = isFirstHour ? hour - 1 : hour + 1;
-              removeTimeRange(adjacentHour, formattedDate, dataToUpdate, selectedDate);
-              console.log(`Removing adjacent hour: ${adjacentHour} due to deselection of a boundary hour.`);
-          }
+          // Additional logic for removing adjacent hours directly associated with deselection
+          // This part might need adjustment based on how adjacent hours are determined
       }
   }
   
