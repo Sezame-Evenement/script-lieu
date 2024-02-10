@@ -108,39 +108,31 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
 
-  function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours) {
-    // Convert hour to integer for calculations
-    hour = parseInt(hour, 10);
-
-    // Ensure data structure for the date is initialized
+  function handleTimeSlot(hour, selectedDate, data) {
+    // Ensure the data structure for the selected date is initialized
     if (!data[selectedDate]) {
         data[selectedDate] = [];
     }
 
-    // Function to add a time range to the data structure
-    const addTimeRangeToData = (h) => {
-        // Format hour correctly
-        const formattedHour = h < 10 ? `0${h}` : `${h}`;
-        const formattedNextHour = ((h + 1) % 24) < 10 ? `0${(h + 1) % 24}` : `${(h + 1) % 24}`;
-        const timeRange = `${formattedHour}h à ${formattedNextHour}h`;
+    // Calculate adjacent hours
+    const hourInt = parseInt(hour, 10); // Convert to integer for calculation
+    const hoursToAdd = [
+        (hourInt - 1 + 24) % 24, // Hour before
+        hourInt, // Selected hour
+        (hourInt + 1) % 24 // Hour after
+    ];
 
-        // Add the time range if it's not already present
+    // Add the selected hour and its adjacent hours to the data structure
+    hoursToAdd.forEach(h => {
+        const formattedHour = h < 10 ? `0${h}` : h;
+        const formattedNextHour = (h + 1) % 24 < 10 ? `0${(h + 1) % 24}` : (h + 1) % 24;
+        const timeRange = `${formattedHour}h à ${formattedNextHour}h`;
         if (!data[selectedDate].includes(timeRange)) {
             data[selectedDate].push(timeRange);
         }
-    };
-
-    // Add the selected hour and its adjacent hours
-    const [hourBefore, hourAfter] = getAdjacentHours(hour);
-
-    // Directly add the selected hour and its adjacent to the data
-    if (!currentlySelectedHours.has(hour)) {
-        currentlySelectedHours.add(hour); // Update this if you need to track selected hours
-        addTimeRangeToData(hour);
-    }
-    addTimeRangeToData(hourBefore);
-    addTimeRangeToData(hourAfter);
+    });
 }
+
 
 function getAdjacentHours(hour) {
     return [(hour - 1 + 24) % 24, (hour + 1) % 24];
