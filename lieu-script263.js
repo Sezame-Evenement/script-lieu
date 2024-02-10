@@ -121,9 +121,7 @@ document.addEventListener("DOMContentLoaded", function() {
     return [(hour - 1 + 24) % 24, (hour + 1) % 24];
   }
   
-  const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
-  console.log(`[updateFirstDateInput] Formatted selected date for ${containerId}:`, formattedSelectedDate);
-
+  
   
 
   function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
