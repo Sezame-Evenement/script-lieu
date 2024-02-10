@@ -181,20 +181,28 @@ document.addEventListener("DOMContentLoaded", function() {
   
   // Ensure addTimeRange and removeTimeRange are properly implemented to handle adding and removing time ranges.
   
+  function formatHour(hour) {
+    // Convert hour to integer in case it's a string
+    const hourInt = parseInt(hour, 10);
+    // Return formatted hour without leading zero if less than 10, else return as is
+    return hourInt < 10 ? `${hourInt}` : `${hourInt}`;
+}
 
+  function addTimeRange(hour, date, data, selectedDate) {
+    // Assuming addTimeRange function's logic is correctly implemented elsewhere
+    // This is an example of how to format the hour range without leading zeros
+    const hourInt = parseInt(hour, 10);
+    const nextHour = (hourInt + 1) % 24; // Calculate the next hour, wrapping to 0 after 23
+    
+    // Format hours using the new formatHour function
+    const formattedHour = formatHour(hourInt);
+    const formattedNextHour = formatHour(nextHour);
+    const timeRange = `${formattedHour}h à ${formattedNextHour}h`;
 
-function addTimeRange(hour, date, data, selectedDate) {
-  if (!data[selectedDate]) {
-      data[selectedDate] = [];
-  }
-  const formattedHour = hour < 10 ? `0${hour}` : hour;
-  const nextHour = (hour + 1) % 24;
-  const formattedNextHour = nextHour < 10 ? `0${nextHour}` : nextHour;
-  const timeRange = `${formattedHour}h à ${formattedNextHour}h`;
-
-  if (!data[selectedDate].includes(timeRange)) {
-      data[selectedDate].push(timeRange);
-  }
+    // Continue with adding the time range to data[selectedDate] if not already included
+    if (!data[selectedDate].includes(timeRange)) {
+        data[selectedDate].push(timeRange);
+    }
 }
 
 
