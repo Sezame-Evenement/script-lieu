@@ -113,36 +113,37 @@ document.addEventListener("DOMContentLoaded", function() {
 }
 
 function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours) {
-    const isSelected = currentlySelectedHours.has(hour);
-    const [hourBefore, hourAfter] = getAdjacentHours(hour);
+  const isSelected = currentlySelectedHours.has(hour);
+  if (!isSelected) {
+      currentlySelectedHours.add(hour);
+      addTimeRange(hour, date, data, selectedDate);
+  }
 
-    if (!isSelected) {
-        currentlySelectedHours.add(hour);
-        addTimeRange(hour, date, data, selectedDate);
-    }
+  const [hourBefore, hourAfter] = getAdjacentHours(hour);
 
-    if (!currentlySelectedHours.has(hourBefore)) {
-        currentlySelectedHours.add(hourBefore);
-        addTimeRange(hourBefore, date, data, selectedDate);
-    }
+  if (!currentlySelectedHours.has(hourBefore)) {
+      addTimeRange(hourBefore, date, data, selectedDate); // Ensure this doesn't add to currentlySelectedHours
+  }
 
-    if (!currentlySelectedHours.has(hourAfter)) {
-        currentlySelectedHours.add(hourAfter);
-        addTimeRange(hourAfter, date, data, selectedDate);
-    }
+  if (!currentlySelectedHours.has(hourAfter)) {
+      addTimeRange(hourAfter, date, data, selectedDate); // Ensure this doesn't add to currentlySelectedHours
+  }
 }
 
 function addTimeRange(hour, date, data, selectedDate) {
-    if (!data[selectedDate]) {
-        data[selectedDate] = [];
-    }
-    const formattedHour = hour < 10 ? `0${hour}` : hour;
-    const formattedHourAfter = (hour + 1) % 24 < 10 ? `0${(hour + 1) % 24}` : (hour + 1) % 24;
-    const timeRange = `${formattedHour}h à ${formattedHourAfter}h`;
-    if (!data[selectedDate].includes(timeRange)) {
-        data[selectedDate].push(timeRange);
-    }
+  if (!data[selectedDate]) {
+      data[selectedDate] = [];
+  }
+  const formattedHour = hour < 10 ? `0${hour}` : hour;
+  const nextHour = (hour + 1) % 24;
+  const formattedNextHour = nextHour < 10 ? `0${nextHour}` : nextHour;
+  const timeRange = `${formattedHour}h à ${formattedNextHour}h`;
+
+  if (!data[selectedDate].includes(timeRange)) {
+      data[selectedDate].push(timeRange);
+  }
 }
+
 
     
     function handleEdgeCases(hour, date, data, selectedDate, isPrevDay, isNextDay) {
