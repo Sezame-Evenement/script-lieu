@@ -161,11 +161,17 @@ document.addEventListener("DOMContentLoaded", function() {
   
       // When selecting, add adjacent hours if they're not already included
       if (!isDeselection) {
-        if (!currentlySelectedHours.has(firstHourBefore)) {
-          addTimeRange(firstHourBefore, date, data, selectedDate);
+        const firstHour = selectedHours[0];
+        const lastHour = selectedHours[selectedHours.length - 1];
+    
+        // Add the hour before
+        if (!currentlySelectedHours.has(firstHour - 1 % 24)) {
+          addTimeRange(firstHour - 1 % 24, date, data, selectedDate);
         }
-        if (!currentlySelectedHours.has(lastHourAfter)) {
-          addTimeRange(lastHourAfter, date, data, selectedDate);
+    
+        // Add the hour after
+        if (!currentlySelectedHours.has(lastHour + 1 % 24)) {
+          addTimeRange(lastHour + 1 % 24, date, data, selectedDate);
         }
       } else {
         // When deselecting, remove adjacent hours if they were not part of the original selection
