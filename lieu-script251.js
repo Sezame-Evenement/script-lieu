@@ -140,53 +140,43 @@ document.addEventListener("DOMContentLoaded", function() {
   
   
     
-    function manageAdjacentHours(selectedHours, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours, isDeselection = false) {
-      // This function will add or remove adjacent hours based on the entire selection.
-      // The logic for calculating which adjacent hours to add or remove should consider the
-      // start and end of the selectedHours array and handle edge cases like day transitions.
-    
-      if (selectedHours.length > 0) {
-        const firstHour = selectedHours[0];
-        const lastHour = selectedHours[selectedHours.length - 1];
-        const [firstHourBefore] = getAdjacentHours(firstHour);
-        const [, lastHourAfter] = getAdjacentHours(lastHour);
-        console.log(`First hour: ${firstHour}`);
-      console.log(`Last hour: ${lastHour}`);
-    
-        // When selecting, add adjacent hours if they're not already included
-        if (!isDeselection) {
-          console.log(`Adding adjacent hours...`);
-  
-          const firstHour = selectedHours[0];
-          const lastHour = selectedHours[selectedHours.length - 1];
-      
-      
-          for (const adjacentHour of [firstHour - 1 % 24, lastHour + 1 % 24]) {
-            console.log(`Checking adjacent hour: ${adjacentHour}`);
-  
-            if (!currentlySelectedHours.has(adjacentHour)) {
-              console.log(`Adding adjacent hour ${adjacentHour} to range.`);
-              addTimeRange(adjacentHour, date, data, selectedDate);
-            } else {
-              console.log(`Adjacent hour ${adjacentHour} already exists.`);
-            }
-          }
-      
-          // Add the hour after
-          if (!currentlySelectedHours.has(lastHour + 1 % 24)) {
-            addTimeRange(lastHour + 1 % 24, date, data, selectedDate);
-          }
-        } else {
-          // When deselecting, remove adjacent hours if they were not part of the original selection
-          if (!previouslySelectedHours.has(firstHourBefore) && currentlySelectedHours.has(firstHourBefore)) {
-            removeTimeRange(firstHourBefore, date, data, selectedDate);
-          }
-          if (!previouslySelectedHours.has(lastHourAfter) && currentlySelectedHours.has(lastHourAfter)) {
-            removeTimeRange(lastHourAfter, date, data, selectedDate);
-          }
-        }
-      }
+  function manageAdjacentHours(selectedHour, data, selectedDate) {
+    // Calculate adjacent hours
+    const previousHour = (selectedHour - 1 + 24) % 24;
+    const nextHour = (selectedHour + 1) % 24;
+
+    // Adjusted date for handling day transition if necessary
+    let { adjustedDate: prevDate } = adjustDateForHourTransition(previousHour, selectedDate);
+    let { adjustedDate: nextDate } = adjustDateForHourTransition(nextHour, selectedDate);
+
+    // Formatting dates for consistency
+    const prevFormattedDate = prevDate.toISOString().split('T')[0];
+    const nextFormattedDate = nextDate.toISOString().split('T')[0];
+
+    // Add adjacent hours if not already included
+    if (!isHourIncluded(previousHour, prevFormattedDate, data)) {
+        console.log(`Adding adjacent hour ${previousHour} to range for date ${prevFormattedDate}.`);
+        addTimeRange(previousHour, prevDate, data);
     }
+    if (!isHourIncluded(nextHour, nextFormattedDate, data)) {
+        console.log(`Adding adjacent hour ${nextHour} to range for date ${nextFormattedDate}.`);
+        addTimeRange(nextHour, nextDate, data);
+    }
+}
+
+function isHourIncluded(hour, formattedDate, data) {
+    // Implement a check to see if the given hour is already included for the date in your data structure
+    const timeRange = `${hour}h à ${(hour + 1) % 24}h`;
+    return data[formattedDate] && data[formattedDate].includes(timeRange);
+}
+
+// Usage within your checkbox change detection logic
+// Assuming 'selectedHour' is the hour corresponding to the checkbox change
+// and 'selectedDate' is the date the change is being made for
+manageAdjacentHours(selectedHour, data, selectedDate);
+
+// Ensure your addTimeRange function correctly handles adding these ranges to 'data'
+
     
     // Ensure addTimeRange and removeTimeRange are properly implemented to handle adding and removing time ranges.
     
