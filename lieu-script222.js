@@ -122,32 +122,30 @@ document.addEventListener("DOMContentLoaded", function() {
     console.log("- currentlySelectedHours:", Array.from(currentlySelectedHours));
     console.log("- previouslySelectedHours:", Array.from(previouslySelectedHours));
     console.log("------------------");
-  
-    // Initialize data[selectedDate] if it does not exist
-    if (!data[selectedDate]) {
-        data[selectedDate] = [];
+
+    // Convert selectedDate to a simplified ISO-like date format (YYYY-MM-DD)
+    const dateObj = new Date(selectedDate);
+    const formattedSelectedDate = dateObj.toISOString().split('T')[0];
+
+    // Initialize data[formattedSelectedDate] if it does not exist
+    if (!data[formattedSelectedDate]) {
+        data[formattedSelectedDate] = [];
     }
 
     const isSelected = currentlySelectedHours.has(hour);
-
-    // Update all selected hours and sort them
     const selectedHours = Array.from(currentlySelectedHours).sort((a, b) => a - b);
-  
-    // Determine adjacent hours for the whole selection, not just the current hour
-    if (isSelected) {
-        // Add the current hour if not previously selected
-        if (!previouslySelectedHours.has(hour)) {
-            addTimeRange(hour, date, data, selectedDate);
-        }
 
-        // Calculate and manage adjacent hours for the updated selection
-        manageAdjacentHours(selectedHours, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours);
+    if (isSelected) {
+        if (!previouslySelectedHours.has(hour)) {
+            addTimeRange(hour, date, data, formattedSelectedDate);
+        }
+        manageAdjacentHours(selectedHours, date, data, formattedSelectedDate, currentlySelectedHours, previouslySelectedHours);
     } else {
-        // Handle deselection
-        removeTimeRange(hour, date, data, selectedDate);
-        manageAdjacentHours(selectedHours, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours, true);
+        removeTimeRange(hour, date, data, formattedSelectedDate);
+        manageAdjacentHours(selectedHours, date, data, formattedSelectedDate, currentlySelectedHours, previouslySelectedHours, true);
     }
 }
+
 
   
   function manageAdjacentHours(selectedHours, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours, isDeselection = false) {
