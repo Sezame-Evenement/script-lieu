@@ -109,35 +109,25 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
   function handleTimeSlot(selectedHour, data, selectedDate) {
-    // Ensure data structure for the selected date is initialized
-    // This check ensures that data[selectedDate] is always an array before we use .includes()
-    if (data[selectedDate] === undefined) {
-        data[selectedDate] = [];
-    }
+    // Directly ensure data[selectedDate] is initialized to an array.
+    // This line is crucial and must ensure that data[selectedDate] is not undefined.
+    data[selectedDate] = data[selectedDate] || [];
 
-    // Parse the selected hour to integer
     let hour = parseInt(selectedHour, 10);
+    let hoursToAdd = [(hour - 1 + 24) % 24, hour, (hour + 1) % 24];
 
-    // Define the adjacent hours
-    let hoursToAdd = [
-        (hour - 1 + 24) % 24, // Hour before
-        hour,                 // Selected hour itself
-        (hour + 1) % 24       // Hour after
-    ];
-
-    // Iterate over hours to add, ensuring each is added only if not already present
     hoursToAdd.forEach(h => {
         let formattedHour = h < 10 ? `0${h}` : `${h}`;
         let nextHour = (h + 1) % 24;
         let formattedNextHour = nextHour < 10 ? `0${nextHour}` : `${nextHour}`;
         let timeRange = `${formattedHour}h à ${formattedNextHour}h`;
 
-        // This check is now safe due to the explicit initialization above
         if (!data[selectedDate].includes(timeRange)) {
             data[selectedDate].push(timeRange);
         }
     });
 }
+
 
 
 
