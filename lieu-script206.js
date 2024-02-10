@@ -108,27 +108,44 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
 
-  function getAdjacentHours(hour) {
+  function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours) {
+    // Convert hour to integer for calculations
+    hour = parseInt(hour, 10);
+
+    // Ensure data structure for the date is initialized
+    if (!data[selectedDate]) {
+        data[selectedDate] = [];
+    }
+
+    // Function to add a time range to the data structure
+    const addTimeRangeToData = (h) => {
+        // Format hour correctly
+        const formattedHour = h < 10 ? `0${h}` : `${h}`;
+        const formattedNextHour = ((h + 1) % 24) < 10 ? `0${(h + 1) % 24}` : `${(h + 1) % 24}`;
+        const timeRange = `${formattedHour}h à ${formattedNextHour}h`;
+
+        // Add the time range if it's not already present
+        if (!data[selectedDate].includes(timeRange)) {
+            data[selectedDate].push(timeRange);
+        }
+    };
+
+    // Add the selected hour and its adjacent hours
+    const [hourBefore, hourAfter] = getAdjacentHours(hour);
+
+    // Directly add the selected hour and its adjacent to the data
+    if (!currentlySelectedHours.has(hour)) {
+        currentlySelectedHours.add(hour); // Update this if you need to track selected hours
+        addTimeRangeToData(hour);
+    }
+    addTimeRangeToData(hourBefore);
+    addTimeRangeToData(hourAfter);
+}
+
+function getAdjacentHours(hour) {
     return [(hour - 1 + 24) % 24, (hour + 1) % 24];
 }
 
-function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours) {
-  const isSelected = currentlySelectedHours.has(hour);
-  if (!isSelected) {
-      currentlySelectedHours.add(hour);
-      addTimeRange(hour, date, data, selectedDate);
-  }
-
-  const [hourBefore, hourAfter] = getAdjacentHours(hour);
-
-  if (!currentlySelectedHours.has(hourBefore)) {
-      addTimeRange(hourBefore, date, data, selectedDate); // Ensure this doesn't add to currentlySelectedHours
-  }
-
-  if (!currentlySelectedHours.has(hourAfter)) {
-      addTimeRange(hourAfter, date, data, selectedDate); // Ensure this doesn't add to currentlySelectedHours
-  }
-}
 
 function addTimeRange(hour, date, data, selectedDate) {
   if (!data[selectedDate]) {
