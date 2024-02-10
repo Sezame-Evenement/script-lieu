@@ -238,54 +238,70 @@ function addTimeRange(hour, date, data, selectedDate) {
         addTimeRange(hour, selectedDate, data, isPrevDay);
       }
     }
-
-    function removeTimeRange(hour, date, data, selectedDate, isPrevDay = false, isNextDay = false) {
-      console.log(`Removing time range for hour ${hour} on date ${date}`);
-
-
-let targetDate = new Date(selectedDate);
-targetDate = adjustDateForHour(hour, targetDate);
-removeRangeFromData(hour, targetDate, data);
-
-if (hour === 0) {
-let prevDate = new Date(selectedDate);
-prevDate.setDate(prevDate.getDate() - 1);
-removeRangeFromData(23, prevDate, data);
-} else if (hour === 23) {
-let nextDate = new Date(selectedDate);
-nextDate.setDate(nextDate.getDate() + 1);
-removeRangeFromData(0, nextDate, data);
-}
-}
-    
+    function removeTimeRange(hour, date, data, selectedDate) {
+      console.log(`Attempting to remove time range for hour ${hour} on date ${date}`);
+  
+      // Convert the selectedDate string to a Date object if it's not already one
+      let targetDate = (typeof selectedDate === 'string') ? new Date(selectedDate) : new Date(selectedDate.getTime());
+  
+      // Adjust targetDate based on the hour, considering overflow into the next or previous day
+      targetDate = adjustDateForHour(hour, targetDate);
+  
+      // Only proceed with removal if the hour is not adjacent to selected hours
+      if (!isAdjacentToSelected(hour, data, targetDate)) {
+          console.log(`Removing time range for hour ${hour} on date ${targetDate.toISOString().split('T')[0]}`);
+          removeRangeFromData(hour, targetDate, data);
+      } else {
+          console.log(`Skipping removal of adjacent hour ${hour} on date ${targetDate.toISOString().split('T')[0]}`);
+      }
+  }
   
   function adjustDateForHour(hour, date) {
-  if (hour < 0) {
-  hour = 23;
-  date.setDate(date.getDate() - 1);
-  } else if (hour > 23) {
-  hour = 0;
-  date.setDate(date.getDate() + 1);
+      let newDate = new Date(date);
+      if (hour < 0) {
+          newDate.setDate(date.getDate() - 1);
+          hour = 23;
+      } else if (hour > 23) {
+          newDate.setDate(date.getDate() + 1);
+          hour = 0;
+      }
+      return newDate;
   }
-  const newDate = new Date(date.getTime()); // create new Date object
-
-  return newDate;
-  }
-
-
+  
   function removeRangeFromData(hour, date, data) {
-  const targetFormattedDate = date.toLocaleDateString('fr-CA');
-  const endHour = (hour + 1) % 24;
-  const range = `${hour}h à ${endHour}h`;
-  
-  if (data[targetFormattedDate]) {
-  const index = data[targetFormattedDate].indexOf(range);
-  if (index !== -1) {
-  data[targetFormattedDate].splice(index, 1);
-  }
-  }
+      const formattedDate = formatDateKey(date);
+      const timeRange = formatTimeRange(hour);
+      if (data[formattedDate]) {
+          const index = data[formattedDate].indexOf(timeRange);
+          if (index !== -1) {
+              data[formattedDate].splice(index, 1);
+          }
+      }
   }
   
+  function formatDateKey(date) {
+      return date.toISOString().split('T')[0];
+  }
+  
+  function formatTimeRange(hour) {
+      return `${hour}h à ${(hour + 1) % 24}h`;
+  }
+  
+  function isAdjacentToSelected(hour, data, date) {
+      // This function checks if the hour is adjacent to any selected hour in the data
+      // Assuming data is structured as { 'YYYY-MM-DD': ['hour range', ...] }
+      const formattedDate = formatDateKey(date);
+      const hourRanges = data[formattedDate] || [];
+      const previousHourRange = formatTimeRange((hour - 1 + 24) % 24);
+      const nextHourRange = formatTimeRange((hour + 1) % 24);
+  
+      // Check if either the previous or next hour range exists in the data
+      return hourRanges.includes(previousHourRange) || hourRanges.includes(nextHourRange);
+  }
+  
+
+
+
   function mergeDataAndUpdateInput() {
   let mergedData = {};
   
