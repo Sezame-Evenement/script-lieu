@@ -125,6 +125,14 @@ document.addEventListener("DOMContentLoaded", function() {
   
     // Handle selection
     if (isSelected && !wasSelected) {
+      console.log(
+        "Adding time range for hour:",
+        hour,
+        "on date:",
+        date,
+        "Currently selected hours:",
+        [...currentlySelectedHours]
+      );
       addTimeRange(hour, date, data, selectedDate);
   
       // Get and filter adjacent hours to avoid duplicates
@@ -132,14 +140,25 @@ document.addEventListener("DOMContentLoaded", function() {
         adjacentHour => !allSelectedHours.has(adjacentHour)
       );
   
+      console.log("Adjacent hours to add:", adjacentHours);
+  
       // Add filtered adjacent hours
       for (const adjacentHour of adjacentHours) {
+        console.log("Adding adjacent hour:", adjacentHour);
         addTimeRange(adjacentHour, date, data, selectedDate);
       }
     }
   
     // Handle deselection
     else if (!isSelected && wasSelected) {
+      console.log(
+        "Removing time range for hour:",
+        hour,
+        "on date:",
+        date,
+        "Currently selected hours:",
+        [...currentlySelectedHours]
+      );
       removeTimeRange(hour, date, data, selectedDate);
   
       // Iterate through previously selected hours
@@ -148,8 +167,11 @@ document.addEventListener("DOMContentLoaded", function() {
           neighborHour => allSelectedHours.has(neighborHour)
         );
   
+        console.log("Checking adjacent hours for", selectedHour, ":", hasAdjacentSelectedHour);
+  
         // Remove only if no adjacent selected hour exists
         if (!hasAdjacentSelectedHour) {
+          console.log("Removing previously selected hour:", selectedHour);
           removeTimeRange(selectedHour, date, data, selectedDate);
         }
       }
