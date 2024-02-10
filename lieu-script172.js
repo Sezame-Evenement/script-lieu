@@ -192,7 +192,7 @@ function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, 
       }
     }
   }
-}
+
 
   
     // Handle deselection
