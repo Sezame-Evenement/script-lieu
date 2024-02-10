@@ -115,20 +115,21 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const hourInt = parseInt(hour, 10);
     const hoursToAdd = [
-        (hourInt - 1 + 24) % 24,
+        hourInt - 1 < 0 ? 23 : hourInt - 1,
         hourInt,
-        (hourInt + 1) % 24
+        hourInt + 1 > 23 ? 0 : hourInt + 1
     ];
 
     hoursToAdd.forEach(h => {
-        const formattedHour = h < 10 ? `0${h}` : `${h}`;
-        const formattedNextHour = (h + 1) % 24 < 10 ? `0${(h + 1) % 24}` : `${(h + 1) % 24}`;
+        const formattedHour = h;
+        const formattedNextHour = (h + 1) % 24;
         const timeRange = `${formattedHour}h à ${formattedNextHour}h`;
         if (!data[selectedDate].includes(timeRange)) {
             data[selectedDate].push(timeRange);
         }
     });
 }
+
 
 
 
