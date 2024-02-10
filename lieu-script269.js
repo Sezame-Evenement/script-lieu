@@ -122,57 +122,39 @@ document.addEventListener("DOMContentLoaded", function() {
   }
   
   
+  // fix the handleTimeSlot function to handle the edge cases and the adjacent hours properly and to add or remove the time ranges correctly based on the entire selection.
   
 
-  function handleTimeSlot(hour, formattedSelectedDate, dataToUpdate, selectedDate, currentlySelectedHours, previouslySelectedHours) {
-    // Log the input parameters to ensure they are received correctly
-    console.log(`[handleTimeSlot] Received: Hour = ${hour}, Formatted Date = ${formattedSelectedDate}`);
-    
-    // Ensure the data structure for the date exists
-    if (!dataToUpdate[formattedSelectedDate]) {
-        dataToUpdate[formattedSelectedDate] = [];
+  function handleTimeSlot(hour, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
+    // Use the corrected approach for timezone-aware date formatting
+    const formattedSelectedDate = selectedDate.toLocaleDateString('en-CA', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        timeZone: 'UTC' // Adjust as needed for your specific timezone requirements
+    });
+    console.log(`Handling time slot: Hour = ${hour}, Date = ${formattedSelectedDate}`);
+
+    // Ensure data structure for the date exists
+    if (!data[formattedSelectedDate]) {
+        data[formattedSelectedDate] = [];
     }
 
-    // Determine if the current hour is selected or not
     const isSelected = currentlySelectedHours.has(hour);
 
-    // If the hour is selected, add it to the data structure
-    if (isSelected && !dataToUpdate[formattedSelectedDate].includes(hour)) {
-        dataToUpdate[formattedSelectedDate].push(hour);
-        console.log(`Added hour ${hour} to date ${formattedSelectedDate}.`);
-    }
-
-    // Check for adjacent hours to potentially add or remove based on selection
-    const [prevHour, nextHour] = [(hour - 1 + 24) % 24, (hour + 1) % 24];
-
-    // Handle addition or removal of adjacent hours based on current selection
+    // Directly manage the time range without checking previouslySelectedHours here
+    // The logic for adding or removing should solely depend on isSelected and adjacent hours logic
     if (isSelected) {
-        // For simplicity, this example will just log the intent to handle adjacent hours
-        // Implement actual logic as needed, e.g., adding or removing from dataToUpdate
-        if (!currentlySelectedHours.has(prevHour)) {
-            console.log(`Considering adding adjacent hour ${prevHour} for date ${formattedSelectedDate}.`);
-            // Add logic as needed
-        }
-        if (!currentlySelectedHours.has(nextHour)) {
-            console.log(`Considering adding adjacent hour ${nextHour} for date ${formattedSelectedDate}.`);
-            // Add logic as needed
-        }
+        // Add the current hour if not already present
+        addTimeRange(hour, data, formattedSelectedDate);
     } else {
-        // If the hour is not selected, consider removing it
-        if (dataToUpdate[formattedSelectedDate].includes(hour)) {
-            const index = dataToUpdate[formattedSelectedDate].indexOf(hour);
-            dataToUpdate[formattedSelectedDate].splice(index, 1);
-            console.log(`Removed hour ${hour} from date ${formattedSelectedDate}.`);
-        }
-
-        // Similar logic for adjacent hours can be implemented here for deselection
+        // Remove the current hour if previously selected
+        removeTimeRange(hour, data, formattedSelectedDate);
     }
 
-    // After handling the current and adjacent hours, ensure the data structure is updated as needed
-    // This is a placeholder for any additional logic required to finalize the data update
-    console.log(`Updated data for ${formattedSelectedDate}:`, dataToUpdate[formattedSelectedDate]);
+    // Now manage adjacent hours based on the current state of selections
+    manageAdjacentHours(hour, data, formattedSelectedDate, currentlySelectedHours);
 }
-
 
 
   
