@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", function() {
   
   
   
-  function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours) {
+  function handleTimeSlot(checkboxContainer, hour, date, data, selectedDate, currentlySelectedHours) {
     // Store selected hours in an array
     const selectedHours = [];
     checkboxContainer.find('.checkbox-hour:checked').each(function() {
