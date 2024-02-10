@@ -125,12 +125,13 @@ document.addEventListener("DOMContentLoaded", function() {
   
 
   function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
-    console.log(`[handleTimeSlot] Received: Hour = ${hour}, Date = ${formattedSelectedDate}`);
+    
 
 
 
     // Convert selectedDate to a simplified ISO-like date format (YYYY-MM-DD)
     const dateObj = new Date(selectedDate);
+    console.log(`[handleTimeSlot] Received: Hour = ${hour}, Date = ${formattedSelectedDate}`);
     const formattedSelectedDate = dateObj.toISOString().split('T')[0];
     console.log(`Handling time slot: Hour = ${hour}, Date = ${formattedSelectedDate}`);
 
