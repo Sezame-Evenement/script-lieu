@@ -46,6 +46,8 @@ document.addEventListener("DOMContentLoaded", function() {
       console.log("More days button clicked.");
 
   const selectedDates = dateInput.selectedDates;
+  console.log("Selected dates before adding more:", selectedDates.map(date => date.toLocaleDateString()));
+
   if (selectedDates.length > 0 && !initialSelectedDate) {
   initialSelectedDate = selectedDates[0];
   }
@@ -61,6 +63,9 @@ document.addEventListener("DOMContentLoaded", function() {
   updateCheckboxOptions([nextDay], "container2");
   secondCheckboxContainer.show();
   secondContainerVisible = true;
+
+  console.log("Next day to be added:", nextDay.toLocaleDateString());
+
   
   $(".date-heading").eq(1).text(formatDate(nextDay));
   $(".date-heading").eq(1).show();
@@ -118,6 +123,8 @@ document.addEventListener("DOMContentLoaded", function() {
     // Convert selectedDate to a simplified ISO-like date format (YYYY-MM-DD)
     const dateObj = new Date(selectedDate);
     const formattedSelectedDate = dateObj.toISOString().split('T')[0];
+    console.log(`Handling time slot: Hour = ${hour}, Date = ${formattedSelectedDate}`);
+
 
     // Initialize data[formattedSelectedDate] if it does not exist
     if (!data[formattedSelectedDate]) {
@@ -240,12 +247,16 @@ function addTimeRange(hour, date, data, selectedDate) {
     }
 
     function adjustDateForHour(hour, date) {
+      console.log(`Adjusting date for hour: ${hour} on original date: ${date.toISOString().split('T')[0]}`);
+
       let newDate = new Date(date);
       if (hour === 23) { // Transition to the next day for 23h à 0h
           newDate.setDate(date.getDate() + 1);
       } else if (hour === 0) { // Consider the previous day for 0h à 1h
           newDate.setDate(date.getDate() - 1);
       }
+      console.log(`New date after adjustment: ${newDate.toISOString().split('T')[0]}`);
+
       return newDate;
   }
 
@@ -253,12 +264,10 @@ function addTimeRange(hour, date, data, selectedDate) {
   function removeTimeRange(hour, date, data) {
     console.log(`Attempting to remove time range for hour ${hour} on date ${date}`);
 
-    // Initially, assume the target date is the same as the input date.
     let targetDate = new Date(date);
 
     
 
-    // Ensure the formatted date string is in ISO format (YYYY-MM-DD) for consistency in data keys.
     const formattedDate = targetDate.toISOString().split('T')[0];
 
     // Construct the time range string for removal.
@@ -315,6 +324,9 @@ function isAdjacentToSelected(hour, data, date) {
 
 
   function mergeDataAndUpdateInput() {
+    console.log("Merging data and updating input.");
+    console.log("Container 1 Data before merge:", container1Data);
+    console.log("Container 2 Data before merge:", container2Data);
   let mergedData = {};
   
   const existingData = getExistingData();
