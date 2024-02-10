@@ -113,15 +113,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
   
   function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
-    console.log("------------------");
-    console.log("Parameters:");
-    console.log(`- hour: ${hour}`);
-    console.log(`- date: ${date}`);
-    console.log("- data: ", data);
-    console.log(`- selectedDate: ${selectedDate}`);
-    console.log("- currentlySelectedHours:", Array.from(currentlySelectedHours));
-    console.log("- previouslySelectedHours:", Array.from(previouslySelectedHours));
-    console.log("------------------");
+
 
     // Convert selectedDate to a simplified ISO-like date format (YYYY-MM-DD)
     const dateObj = new Date(selectedDate);
@@ -158,16 +150,25 @@ document.addEventListener("DOMContentLoaded", function() {
       const lastHour = selectedHours[selectedHours.length - 1];
       const [firstHourBefore] = getAdjacentHours(firstHour);
       const [, lastHourAfter] = getAdjacentHours(lastHour);
+      console.log(`First hour: ${firstHour}`);
+    console.log(`Last hour: ${lastHour}`);
   
       // When selecting, add adjacent hours if they're not already included
       if (!isDeselection) {
+        console.log(`Adding adjacent hours...`);
+
         const firstHour = selectedHours[0];
         const lastHour = selectedHours[selectedHours.length - 1];
     
     
         for (const adjacentHour of [firstHour - 1 % 24, lastHour + 1 % 24]) {
+          console.log(`Checking adjacent hour: ${adjacentHour}`);
+
           if (!currentlySelectedHours.has(adjacentHour)) {
+            console.log(`Adding adjacent hour ${adjacentHour} to range.`);
             addTimeRange(adjacentHour, date, data, selectedDate);
+          } else {
+            console.log(`Adjacent hour ${adjacentHour} already exists.`);
           }
         }
     
