@@ -131,7 +131,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Convert selectedDate to a simplified ISO-like date format (YYYY-MM-DD)
     const dateObj = new Date(selectedDate);
-    const formattedSelectedDate = dateObj.toISOString().split('T')[0];
     console.log(`Handling time slot: Hour = ${hour}, Date = ${formattedSelectedDate}`);
 
 
