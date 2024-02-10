@@ -110,6 +110,8 @@ document.addEventListener("DOMContentLoaded", function() {
   
   
   function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
+    console.log(`Handling time slot for hour: ${hour} on date: ${date}`);
+
     const isSelected = currentlySelectedHours.has(hour);
     const wasSelected = previouslySelectedHours.has(hour);
   
@@ -120,67 +122,82 @@ document.addEventListener("DOMContentLoaded", function() {
     const hourBefore = (hour + 23) % 24;
     const hourAfter = (hour + 1) % 24;
   
+    console.log(`Adjacent hours for ${hour}: Before - ${hourBefore}, After - ${hourAfter}`);
+  
     if (isSelected && !wasSelected &&
       (hour === selectedHours[0] ||
        (hour > selectedHours[0] && hourBefore > selectedHours[selectedHours.length - 1]))) {
-    // Handle edge case: previous day if necessary
-    if (hour === selectedHours[0] && hourBefore > selectedHours[selectedHours.length - 1]) {
-      const prevDate = new Date(selectedDate);
-      prevDate.setDate(prevDate.getDate() - 1);
-      addTimeRange(hourBefore, prevDate.toLocaleDateString('fr-CA'), data, prevDate);
-    } else {
-      addTimeRange(hourBefore, date, data, selectedDate);
+        console.log(`Adding adjacent hour before: ${hourBefore}`);
+        
+        // Handle edge case: previous day if necessary
+        if (hour === selectedHours[0] && hourBefore > selectedHours[selectedHours.length - 1]) {
+          const prevDate = new Date(selectedDate);
+          prevDate.setDate(prevDate.getDate() - 1);
+          console.log(`Edge case: Adding ${hourBefore} to previous day: ${prevDate.toLocaleDateString('fr-CA')}`);
+          addTimeRange(hourBefore, prevDate.toLocaleDateString('fr-CA'), data, prevDate);
+        } else {
+          addTimeRange(hourBefore, date, data, selectedDate);
+        }
     }
-  }
 
-  // Add hourAfter if necessary
-  if (isSelected && !wasSelected &&
-      (hour === selectedHours[selectedHours.length - 1] ||
-       (hour < selectedHours[selectedHours.length - 1] && hourAfter < selectedHours[0]))) {
-    // Handle edge case: next day if necessary
-    if (hour === selectedHours[selectedHours.length - 1] && hourAfter < selectedHours[0]) {
-      const nextDate = new Date(selectedDate);
-      nextDate.setDate(nextDate.getDate() + 1);
-      addTimeRange(hourAfter, nextDate.toLocaleDateString('fr-CA'), data, nextDate);
-    } else {
-      addTimeRange(hourAfter, date, data, selectedDate);
+    // Add hourAfter if necessary
+    if (isSelected && !wasSelected &&
+        (hour === selectedHours[selectedHours.length - 1] ||
+         (hour < selectedHours[selectedHours.length - 1] && hourAfter < selectedHours[0]))) {
+          console.log(`Adding adjacent hour after: ${hourAfter}`);
+          
+          // Handle edge case: next day if necessary
+          if (hour === selectedHours[selectedHours.length - 1] && hourAfter < selectedHours[0]) {
+            const nextDate = new Date(selectedDate);
+            nextDate.setDate(nextDate.getDate() + 1);
+            console.log(`Edge case: Adding ${hourAfter} to next day: ${nextDate.toLocaleDateString('fr-CA')}`);
+            addTimeRange(hourAfter, nextDate.toLocaleDateString('fr-CA'), data, nextDate);
+          } else {
+            addTimeRange(hourAfter, date, data, selectedDate);
+          }
     }
-  }
   
     // Handle deselection
     else if (!isSelected && wasSelected) {
-      removeTimeRange(hour, date, data, selectedDate);
+        console.log(`Removing selected hour: ${hour}`);
+        removeTimeRange(hour, date, data, selectedDate);
   
-      // Remove hour before only if it was added due to the previous selection
-      if (previouslySelectedHours.has(hourBefore) &&
-          !currentlySelectedHours.has(hourBefore) &&
-          (hourBefore === selectedHours[0] || hourBefore > selectedHours[selectedHours.length - 1])) {
-        // Handle edge case: remove from previous day
-        if (hourBefore === selectedHours[0] && hourBefore > selectedHours[selectedHours.length - 1]) {
-          const prevDate = new Date(selectedDate);
-          prevDate.setDate(prevDate.getDate() - 1);
-          removeTimeRange(hourBefore, prevDate.toLocaleDateString('fr-CA'), data, prevDate);
-        } else {
-          removeTimeRange(hourBefore, date, data, selectedDate);
+        // Remove hour before only if it was added due to the previous selection
+        if (previouslySelectedHours.has(hourBefore) &&
+            !currentlySelectedHours.has(hourBefore) &&
+            (hourBefore === selectedHours[0] || hourBefore > selectedHours[selectedHours.length - 1])) {
+              console.log(`Removing adjacent hour before due to deselection: ${hourBefore}`);
+              
+              // Handle edge case: remove from previous day
+              if (hourBefore === selectedHours[0] && hourBefore > selectedHours[selectedHours.length - 1]) {
+                const prevDate = new Date(selectedDate);
+                prevDate.setDate(prevDate.getDate() - 1);
+                console.log(`Edge case: Removing ${hourBefore} from previous day: ${prevDate.toLocaleDateString('fr-CA')}`);
+                removeTimeRange(hourBefore, prevDate.toLocaleDateString('fr-CA'), data, prevDate);
+              } else {
+                removeTimeRange(hourBefore, date, data, selectedDate);
+              }
         }
-      }
   
-      // Remove hour after only if it was added due to the previous selection
-      if (previouslySelectedHours.has(hourAfter) &&
-          !currentlySelectedHours.has(hourAfter) &&
-          (hourAfter === selectedHours[selectedHours.length - 1] || hourAfter < selectedHours[0])) {
-        // Handle edge case: remove from next day
-        if (hourAfter === selectedHours[selectedHours.length - 1] && hourAfter < selectedHours[0]) {
-          const nextDate = new Date(selectedDate);
-          nextDate.setDate(nextDate.getDate() + 1);
-          removeTimeRange(hourAfter, nextDate.toLocaleDateString('fr-CA'), data, nextDate);
-        } else {
-          removeTimeRange(hourAfter, date, data, selectedDate);
+        // Remove hour after only if it was added due to the previous selection
+        if (previouslySelectedHours.has(hourAfter) &&
+            !currentlySelectedHours.has(hourAfter) &&
+            (hourAfter === selectedHours[selectedHours.length - 1] || hourAfter < selectedHours[0])) {
+                console.log(`Removing adjacent hour after due to deselection: ${hourAfter}`);
+                
+                // Handle edge case: remove from next day
+                if (hourAfter === selectedHours[selectedHours.length - 1] && hourAfter < selectedHours[0]) {
+                  const nextDate = new Date(selectedDate);
+                  nextDate.setDate(nextDate.getDate() + 1);
+                  console.log(`Edge case: Removing ${hourAfter} from next day: ${nextDate.toLocaleDateString('fr-CA')}`);
+                  removeTimeRange(hourAfter, nextDate.toLocaleDateString('fr-CA'), data, nextDate);
+                } else {
+                  removeTimeRange(hourAfter, date, data, selectedDate);
+                }
         }
-      }
     }
-  }
-  
+}
+
   
     
     
