@@ -105,22 +105,42 @@ document.addEventListener("DOMContentLoaded", function() {
     
     
     function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
-        const isSelected = currentlySelectedHours.has(hour);
-        const wasSelected = previouslySelectedHours.has(hour);
-    
-        // If the hour is currently selected but was not previously selected, it's a new selection.
-        if (isSelected && !wasSelected) {
-            console.log(`Selecting new hour: ${hour}. Adding time range.`);
-            addTimeRange(hour, date, data, selectedDate);
-            // Optionally, add logic here to add adjacent hours if necessary.
-        }
-        // If the hour was previously selected but is not currently selected, it's being deselected.
-        else if (!isSelected && wasSelected) {
-            console.log(`Deselecting hour: ${hour}. Removing time range.`);
-            removeTimeRange(hour, date, data, selectedDate);
-            // Optionally, add logic here to remove adjacent hours if necessary.
-        }
-    }
+      const isSelected = currentlySelectedHours.has(hour);
+      const wasSelected = previouslySelectedHours.has(hour);
+  
+      // Adjust hour for day boundaries
+      let adjustedHour = hour;
+      let adjustedDate = new Date(date);
+      if (hour < 0) {
+          adjustedHour = 23;
+          adjustedDate.setDate(adjustedDate.getDate() - 1);
+      } else if (hour > 23) {
+          adjustedHour = 0;
+          adjustedDate.setDate(adjustedDate.getDate() + 1);
+      }
+  
+      // Convert adjusted date back to string format for consistency
+      const formattedAdjustedDate = adjustedDate.toLocaleDateString('fr-CA');
+  
+      if (isSelected && !wasSelected) {
+          // Adding new selection
+          console.log(`Adding selected hour: ${hour} to ${formattedAdjustedDate}`);
+          addTimeRange(adjustedHour, formattedAdjustedDate, data, selectedDate);
+          
+          // Handle adding adjacent hours if this is the start or end of a new continuous range
+          // This part needs custom logic based on your range management strategy
+          
+      } else if (!isSelected && wasSelected) {
+          // Removing a selection
+          console.log(`Removing selected hour: ${hour} from ${formattedAdjustedDate}`);
+          removeTimeRange(adjustedHour, formattedAdjustedDate, data, selectedDate);
+  
+          // If deselection breaks a continuous range, adjust adjacent hours accordingly
+          // This requires identifying the start and end of the continuous range
+          // and potentially removing adjacent hours if they were automatically added
+      }
+  }
+  
     
     
     
