@@ -107,24 +107,24 @@ document.addEventListener("DOMContentLoaded", function() {
         const isSelected = currentlySelectedHours.has(hour);
         const wasSelected = previouslySelectedHours.has(hour);
     
+        // Direct selection
         if (isSelected && !wasSelected) {
             console.log(`Selecting new hour: ${hour}. Adding time range.`);
             addTimeRange(hour, date, data, selectedDate); // Add the directly selected range
     
-            // Add an hour before if it's a new selection and not already covered
-            if (!currentlySelectedHours.has(hour - 1) && !previouslySelectedHours.has(hour - 1) && hour > 0) { // Check for lower bound
+            // Attempt to add an hour before if it's not already selected or previously added
+            if (!currentlySelectedHours.has(hour - 1) && !previouslySelectedHours.has(hour - 1)) {
                 console.log(`Adding adjacent hour before: ${hour - 1}`);
                 addTimeRange(hour - 1, date, data, selectedDate);
             }
     
-            // Add an hour after if it's a new selection and not already covered
-            if (!currentlySelectedHours.has(hour + 1) && !previouslySelectedHours.has(hour + 1) && hour < 23) { // Check for upper bound
+            // Attempt to add an hour after if it's not already selected or previously added
+            if (!currentlySelectedHours.has(hour + 1) && !previouslySelectedHours.has(hour + 1)) {
                 console.log(`Adding adjacent hour after: ${hour + 1}`);
                 addTimeRange(hour + 1, date, data, selectedDate);
             }
         }
     }
-    
     
     
     
