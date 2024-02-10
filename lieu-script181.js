@@ -110,73 +110,37 @@ document.addEventListener("DOMContentLoaded", function() {
   
   
   function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
-  const isSelected = currentlySelectedHours.has(hour);
-  const wasSelected = previouslySelectedHours.has(hour);
-
-  // Maintain a set of all selected hours, including previously selected ones
-  const allSelectedHours = new Set([...currentlySelectedHours, ...previouslySelectedHours]);
-
-  // Helper function to get adjacent hours within valid range
-  function getAdjacentHours(hour) {
-    const previousHour = (hour + 23) % 24;
-    const nextHour = (hour + 1) % 24;
-    return [previousHour, nextHour];
-  }
-
-  // Handle selection
-  if (isSelected && !wasSelected) {
-    console.log(
-      "Adding time range for hour:",
-      hour,
-      "on date:",
-      date,
-      "Currently selected hours:",
-      [...currentlySelectedHours]
-    );
-    addTimeRange(hour, date, data, selectedDate);
-
-    // Get and filter adjacent hours to avoid duplicates
-    const adjacentHours = getAdjacentHours(hour).filter(
-      adjacentHour => !allSelectedHours.has(adjacentHour)
-    );
-
-    console.log("Adjacent hours to add:", adjacentHours);
-
-    // Add filtered adjacent hours
-    for (const adjacentHour of adjacentHours) {
-      console.log("Adding adjacent hour:", adjacentHour);
-      addTimeRange(adjacentHour, date, data, selectedDate);
+    const isSelected = currentlySelectedHours.has(hour);
+    const wasSelected = previouslySelectedHours.has(hour);
+    const allSelectedHours = new Set([...currentlySelectedHours, ...previouslySelectedHours]);
+  
+    // Adjusted logic for determining adjacency
+    const getAdjacentHours = hour => [(hour + 23) % 24, (hour + 1) % 24];
+  
+    if (isSelected && !wasSelected) {
+      addTimeRange(hour, date, data, selectedDate);
+      const adjacentHours = getAdjacentHours(hour);
+      adjacentHours.forEach(adjacentHour => {
+        if (!allSelectedHours.has(adjacentHour)) {
+          addTimeRange(adjacentHour, date, data, selectedDate);
+        }
+      });
+    } else if (!isSelected && wasSelected) {
+      // Deselection may require more nuanced handling
+      removeTimeRange(hour, date, data, selectedDate);
+      // Check if adjacent hours should remain
+      getAdjacentHours(hour).forEach(adjacentHour => {
+        if (allSelectedHours.has(adjacentHour)) {
+          const furtherAdjacentHours = getAdjacentHours(adjacentHour).filter(h => h !== hour);
+          const shouldKeep = furtherAdjacentHours.some(furtherAdjacentHour => currentlySelectedHours.has(furtherAdjacentHour));
+          if (!shouldKeep) {
+            removeTimeRange(adjacentHour, date, data, selectedDate);
+          }
+        }
+      });
     }
   }
-
-  // Handle deselection
-  else if (!isSelected && wasSelected) {
-    console.log(
-      "Removing time range for hour:",
-      hour,
-      "on date:",
-      date,
-      "Currently selected hours:",
-      [...currentlySelectedHours]
-    );
-    removeTimeRange(hour, date, data, selectedDate);
-
-    // Iterate through previously selected hours
-    for (const selectedHour of previouslySelectedHours) {
-      const hasAdjacentSelectedHour = getAdjacentHours(selectedHour).some(
-        neighborHour => allSelectedHours.has(neighborHour)
-      );
-
-      console.log("Checking adjacent hours for", selectedHour, ":", hasAdjacentSelectedHour);
-
-      // Remove only if no adjacent selected hour exists
-      if (!hasAdjacentSelectedHour) {
-        console.log("Removing previously selected hour:", selectedHour);
-        removeTimeRange(selectedHour, date, data, selectedDate);
-      }
-    }
-  }
-  }
+  
   
 
   
