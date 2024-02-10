@@ -255,10 +255,20 @@ document.addEventListener("DOMContentLoaded", function() {
     
     function addTimeRangeIfNecessary(hour, data, selectedDate, isPrevDay) {
       const formattedDate = selectedDate.toLocaleDateString('fr-CA');
-      if (!data[formattedDate].includes(`${hour}h à ${(hour + 1) % 24}h`)) {
+    
+      // Ensure data[formattedDate] exists before using it (if necessary):
+      if (!data[formattedDate]) {
+        data[formattedDate] = []; // Or initialize it based on your data structure
+      }
+    
+      // Check if the time range already exists in data[formattedDate]:
+      const timeRange = `${hour}h à ${(hour + 1) % 24}h`;
+      if (!data[formattedDate].includes(timeRange)) {
+        // Add the time range to data[formattedDate]:
         addTimeRange(hour, selectedDate, data, isPrevDay);
       }
     }
+    
 
   function removeTimeRange(hour, date, data, selectedDate, isPrevDay = false, isNextDay = false) {
               console.log(`Removing time range for hour ${hour} on date ${date}`);
