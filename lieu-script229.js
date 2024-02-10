@@ -196,17 +196,23 @@ function addTimeRange(hour, date, data, selectedDate) {
   // Handle edge case for hour 23
   const nextHour = hour === 23 ? 0 : (hour + 1) % 24;
 
-  // Consistent two-digit formatting
-  const formattedHour = hour.toString().padStart(2, '0');
-  const formattedNextHour = nextHour.toString().padStart(2, '0');
-
-  // Construct the time range string
+  // Construct the time range string without leading zeros
+  const formattedHour = hour.toString().replace(/^0+/, '');
+  const formattedNextHour = nextHour.toString().replace(/^0+/, '');
   const timeRange = `${formattedHour}h à ${formattedNextHour}h`;
 
-  if (!data[selectedDate].includes(timeRange)) {
+  // Update data based on checkbox state
+  const isAdding = document.getElementById(`checkbox-${hour}-${selectedDate}`).checked; // Assuming you have checkboxes with such IDs
+  if (isAdding) {
     data[selectedDate].push(timeRange);
+  } else {
+    const index = data[selectedDate].indexOf(timeRange);
+    if (index !== -1) {
+      data[selectedDate].splice(index, 1);
+    }
   }
 }
+
 
 
 
