@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", function() {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const dateInput = flatpickr("#date", {
   altInput: true, altFormat: "d/m/y", locale: "fr", enableTime: false, minDate: today,
+  
   disable: [function(date) {
   return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
   }],
@@ -109,43 +110,35 @@ document.addEventListener("DOMContentLoaded", function() {
   
   
   
-  function handleTimeSlot(checkboxContainer, hour, date, data, selectedDate, currentlySelectedHours) {
-    // Store selected hours in an array
-    const selectedHours = [];
-    checkboxContainer.find('.checkbox-hour:checked').each(function() {
-      const hour = parseInt(this.value.split(':')[0]);
-      selectedHours.push(hour);
-    });
+  function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
+    const isSelected = currentlySelectedHours.has(hour);
+    const wasSelected = previouslySelectedHours.has(hour);
+    const allSelectedHours = new Set([...currentlySelectedHours, ...previouslySelectedHours]);
   
     // Adjusted logic for determining adjacency
     const getAdjacentHours = hour => [(hour + 23) % 24, (hour + 1) % 24];
   
-    // Add adjacent hours if needed
-    for (const selectedHour of selectedHours) {
-      const adjacentHours = getAdjacentHours(selectedHour);
-      for (const adjacentHour of adjacentHours) {
-        if (!currentlySelectedHours.includes(adjacentHour)) {
+    if (isSelected && !wasSelected) {
+      addTimeRange(hour, date, data, selectedDate);
+      const adjacentHours = getAdjacentHours(hour);
+      adjacentHours.forEach(adjacentHour => {
+        if (!allSelectedHours.has(adjacentHour)) {
           addTimeRange(adjacentHour, date, data, selectedDate);
         }
-      }
-    }
-  
-    // Deselection may require more nuanced handling
-    for (const selectedHour of selectedHours) {
-      if (!currentlySelectedHours.includes(selectedHour)) {
-        removeTimeRange(selectedHour, date, data, selectedDate);
-        // Check if adjacent hours should remain
-        const adjacentHours = getAdjacentHours(selectedHour);
-        for (const adjacentHour of adjacentHours) {
-          if (currentlySelectedHours.includes(adjacentHour)) {
-            const furtherAdjacentHours = getAdjacentHours(adjacentHour).filter(h => h !== selectedHour);
-            const shouldKeep = furtherAdjacentHours.some(furtherAdjacentHour => selectedHours.includes(furtherAdjacentHour));
-            if (!shouldKeep) {
-              removeTimeRange(adjacentHour, date, data, selectedDate);
-            }
+      });
+    } else if (!isSelected && wasSelected) {
+      // Deselection may require more nuanced handling
+      removeTimeRange(hour, date, data, selectedDate);
+      // Check if adjacent hours should remain
+      getAdjacentHours(hour).forEach(adjacentHour => {
+        if (allSelectedHours.has(adjacentHour)) {
+          const furtherAdjacentHours = getAdjacentHours(adjacentHour).filter(h => h !== hour);
+          const shouldKeep = furtherAdjacentHours.some(furtherAdjacentHour => currentlySelectedHours.has(furtherAdjacentHour));
+          if (!shouldKeep) {
+            removeTimeRange(adjacentHour, date, data, selectedDate);
           }
         }
-      }
+      });
     }
   }
   
@@ -213,24 +206,37 @@ function getAdjacentHours(hour) {
       }
     }
 
-  function removeTimeRange(hour, date, data, selectedDate, isPrevDay = false, isNextDay = false) {
-              console.log(`Removing time range for hour ${hour} on date ${date}`);
-
-  
-  let targetDate = new Date(selectedDate);
-  targetDate = adjustDateForHour(hour, targetDate);
-  removeRangeFromData(hour, targetDate, data);
-  
-  if (hour === 0) {
-  let prevDate = new Date(selectedDate);
-  prevDate.setDate(prevDate.getDate() - 1);
-  removeRangeFromData(23, prevDate, data);
-  } else if (hour === 23) {
-  let nextDate = new Date(selectedDate);
-  nextDate.setDate(nextDate.getDate() + 1);
-  removeRangeFromData(0, nextDate, data);
-  }
-  }
+    function removeTimeRange(hour, date, data, selectedDate, isPrevDay = false, isNextDay = false) {
+      console.log(`Removing time range for hour ${hour} on date ${date}`);
+    
+      let targetDate = new Date(selectedDate);
+      targetDate = adjustDateForHour(hour, targetDate);
+      removeRangeFromData(hour, targetDate, data);
+    
+      if (hour === 0) {
+        let prevDate = new Date(selectedDate);
+        prevDate.setDate(prevDate.getDate() - 1);
+        removeRangeFromData(23, prevDate, data);
+      } else if (hour === 23) {
+        let nextDate = new Date(selectedDate);
+        nextDate.setDate(nextDate.getDate() + 1);
+        removeRangeFromData(0, nextDate, data);
+      }
+    
+      // Check adjacent hours for deselection based on current selections
+      const adjacentHours = getAdjacentHours(hour);
+      adjacentHours.forEach(adjacentHour => {
+        if (!currentlySelectedHours.has(adjacentHour)) {
+          // No direct selection, check if any other selection supports it
+          const furtherAdjacentHours = getAdjacentHours(adjacentHour).filter(h => h !== hour);
+          const shouldKeep = furtherAdjacentHours.some(furtherAdjacentHour => currentlySelectedHours.has(furtherAdjacentHour));
+          if (!shouldKeep) {
+            removeTimeRange(adjacentHour, data, selectedDate, isPrevDay, isNextDay);
+          }
+        }
+      });
+    }
+    
   
   function adjustDateForHour(hour, date) {
   if (hour < 0) {
