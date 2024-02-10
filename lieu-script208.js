@@ -108,30 +108,35 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
 
-  function handleTimeSlot(hour, selectedDate, data) {
-    // Ensure the data structure for the selected date is initialized
+  function handleTimeSlot(selectedHour, data, selectedDate) {
+    // Initialize the data structure for the selected date if not present
     if (!data[selectedDate]) {
         data[selectedDate] = [];
     }
 
-    // Calculate adjacent hours
-    const hourInt = parseInt(hour, 10); // Convert to integer for calculation
-    const hoursToAdd = [
-        (hourInt - 1 + 24) % 24, // Hour before
-        hourInt, // Selected hour
-        (hourInt + 1) % 24 // Hour after
+    // Parse the selected hour to integer
+    let hour = parseInt(selectedHour, 10);
+
+    // Define the adjacent hours
+    let hoursToAdd = [
+        (hour - 1 + 24) % 24, // Hour before
+        hour,                 // Selected hour itself
+        (hour + 1) % 24       // Hour after
     ];
 
-    // Add the selected hour and its adjacent hours to the data structure
+    // Add the selected and adjacent hours to the data array for the selected date
     hoursToAdd.forEach(h => {
-        const formattedHour = h < 10 ? `0${h}` : h;
-        const formattedNextHour = (h + 1) % 24 < 10 ? `0${(h + 1) % 24}` : (h + 1) % 24;
-        const timeRange = `${formattedHour}h à ${formattedNextHour}h`;
+        let formattedHour = h < 10 ? `0${h}` : `${h}`;
+        let nextHour = (h + 1) % 24;
+        let formattedNextHour = nextHour < 10 ? `0${nextHour}` : `${nextHour}`;
+        let timeRange = `${formattedHour}h à ${formattedNextHour}h`;
+
         if (!data[selectedDate].includes(timeRange)) {
             data[selectedDate].push(timeRange);
         }
     });
 }
+
 
 
 function getAdjacentHours(hour) {
