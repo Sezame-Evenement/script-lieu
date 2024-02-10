@@ -207,6 +207,7 @@ function getAdjacentHours(hour) {
     }
 
     function removeTimeRange(hour, date, data, selectedDate, currentlySelectedHours, isPrevDay = false, isNextDay = false) {
+      currentlySelectedHours = currentlySelectedHours || new Set();
       console.log(`Removing time range for hour ${hour} on date ${date}`);
 
     
