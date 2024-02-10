@@ -110,19 +110,36 @@ document.addEventListener("DOMContentLoaded", function() {
   
   
   function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
+    console.log("------------------");
+    console.log("Parameters:");
+    console.log(`- hour: ${hour}`);
+    console.log(`- date: ${date}`);
+    console.log(`- data: `, data); // Log data object structure if helpful
+    console.log(`- selectedDate: ${selectedDate}`);
+    console.log(`- currentlySelectedHours:`, currentlySelectedHours); // Log set elements
+    console.log(`- previouslySelectedHours:`, previouslySelectedHours); // Log set elements
+    console.log("------------------");
     const isSelected = currentlySelectedHours.has(hour);
     const wasSelected = previouslySelectedHours.has(hour);
+    console.log(`- isSelected: ${isSelected}`);
+console.log(`- wasSelected: ${wasSelected}`);
   
     // Track all selected hours as an array and sort them chronologically
     const selectedHours = Array.from(currentlySelectedHours).sort((a, b) => a - b);
+    console.log(`- selectedHours:`, selectedHours);
+
   
     // Calculate adjacent hours considering edge cases
     const hourBefore = (hour + 23) % 24;
     const hourAfter = (hour + 1) % 24;
+    console.log(`- hourBefore: ${hourBefore}`);
+console.log(`- hourAfter: ${hourAfter}`);
   
     if (isSelected && !wasSelected &&
       (hour === selectedHours[0] ||
        (hour > selectedHours[0] && hourBefore > selectedHours[selectedHours.length - 1]))) {
+        console.log("Adding time range...");
+
     // Handle edge case: previous day if necessary
     if (hour === selectedHours[0] && hourBefore > selectedHours[selectedHours.length - 1]) {
       const prevDate = new Date(selectedDate);
@@ -137,6 +154,9 @@ document.addEventListener("DOMContentLoaded", function() {
   if (isSelected && !wasSelected &&
       (hour === selectedHours[selectedHours.length - 1] ||
        (hour < selectedHours[selectedHours.length - 1] && hourAfter < selectedHours[0]))) {
+        console.log("Adding time range...");
+
+        
     // Handle edge case: next day if necessary
     if (hour === selectedHours[selectedHours.length - 1] && hourAfter < selectedHours[0]) {
       const nextDate = new Date(selectedDate);
@@ -149,6 +169,8 @@ document.addEventListener("DOMContentLoaded", function() {
   
     // Handle deselection
     else if (!isSelected && wasSelected) {
+      console.log("Removing time range...");
+
       removeTimeRange(hour, date, data, selectedDate);
   
       // Remove hour before only if it was added due to the previous selection
