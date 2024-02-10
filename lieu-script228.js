@@ -190,23 +190,24 @@ document.addEventListener("DOMContentLoaded", function() {
 
 function addTimeRange(hour, date, data, selectedDate) {
   if (!data[selectedDate]) {
-      data[selectedDate] = [];
+    data[selectedDate] = [];
   }
 
-  // Adjust formatting to remove leading zeros
-  const formattedHour = hour < 10 ? `${hour}` : `${hour}`;
-  const nextHour = (hour + 1) % 24;
-  const formattedNextHour = nextHour < 10 ? `${nextHour}` : `${nextHour}`;
+  // Handle edge case for hour 23
+  const nextHour = hour === 23 ? 0 : (hour + 1) % 24;
 
-  // Construct the time range string without leading zeros
+  // Consistent two-digit formatting
+  const formattedHour = hour.toString().padStart(2, '0');
+  const formattedNextHour = nextHour.toString().padStart(2, '0');
+
+  // Construct the time range string
   const timeRange = `${formattedHour}h à ${formattedNextHour}h`;
 
-  if (hour < 23 && !data[selectedDate].includes(`${hour}h à ${(hour + 1).toString().padStart(2, '0')}h`)) {
-    data[selectedDate].push(`${hour}h à ${(hour + 1).toString().padStart(2, '0')}h`);
-
-
+  if (!data[selectedDate].includes(timeRange)) {
+    data[selectedDate].push(timeRange);
   }
 }
+
 
 
 
