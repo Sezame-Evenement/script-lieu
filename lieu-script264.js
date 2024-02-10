@@ -125,6 +125,8 @@ document.addEventListener("DOMContentLoaded", function() {
   
 
   function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
+    console.log(`[handleTimeSlot] Received: Hour = ${hour}, Date = ${formattedSelectedDate}`);
+
 
 
     // Convert selectedDate to a simplified ISO-like date format (YYYY-MM-DD)
