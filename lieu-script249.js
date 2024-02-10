@@ -256,18 +256,17 @@ function removeTimeRange(hour, date, data, selectedDate) {
     }
 }
 
-function adjustDateForHour(hour, baseDate) {
-  let adjustedDate = new Date(baseDate);
-  if (hour === 24) {
-      adjustedDate.setDate(adjustedDate.getDate() + 1);
-      hour = 0;
-  } else if (hour === -1) {
-      adjustedDate.setDate(adjustedDate.getDate() - 1);
-      hour = 23;
-  }
-  return { adjustedDate, adjustedHour: hour };
+function adjustDateForHour(hour, date) {
+    let newDate = new Date(date);
+    if (hour < 0) {
+        newDate.setDate(date.getDate() - 1);
+        hour = 23;
+    } else if (hour > 23) {
+        newDate.setDate(date.getDate() + 1);
+        hour = 0;
+    }
+    return newDate;
 }
-
 
 function removeRangeFromData(hour, date, data) {
     const formattedDate = formatDateKey(date);
