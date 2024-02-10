@@ -215,28 +215,7 @@ function addTimeRange(hour, date, data, selectedDate) {
   }
 }
 
-function adjustDateForHour(hour, date) {
-  if (hour < 0) {
-  hour = 23;
-  date.setDate(date.getDate() - 1);
-  } else if (hour > 23) {
-  hour = 0;
-  date.setDate(date.getDate() + 1);
-  }
-  return date;
-  }
-  function removeRangeFromData(hour, date, data) {
-  const targetFormattedDate = date.toLocaleDateString('fr-CA');
-  const endHour = (hour + 1) % 24;
-  const range = `${hour}h à ${endHour}h`;
-  
-  if (data[targetFormattedDate]) {
-  const index = data[targetFormattedDate].indexOf(range);
-  if (index !== -1) {
-  data[targetFormattedDate].splice(index, 1);
-  }
-  }
-  }
+
 
     
     function handleEdgeCases(hour, date, data, selectedDate, isPrevDay, isNextDay) {
@@ -283,7 +262,34 @@ function adjustDateForHour(hour, date) {
     }
     
   
+    function adjustDateForHour(hour, date) {
+      const newDate = new Date(date.getTime()); // Create new Date object first
+    
+      if (hour < 0) {
+        hour = 23;
+        newDate.setDate(newDate.getDate() - 1); // Modify newDate
+      } else if (hour > 23) {
+        hour = 0;
+        newDate.setDate(newDate.getDate() + 1); // Modify newDate
+      }
+    
+      return newDate;
+    }
+    
 
+
+  function removeRangeFromData(hour, date, data) {
+  const targetFormattedDate = date.toLocaleDateString('fr-CA');
+  const endHour = (hour + 1) % 24;
+  const range = `${hour}h à ${endHour}h`;
+  
+  if (data[targetFormattedDate]) {
+  const index = data[targetFormattedDate].indexOf(range);
+  if (index !== -1) {
+  data[targetFormattedDate].splice(index, 1);
+  }
+  }
+  }
   
   function mergeDataAndUpdateInput() {
   let mergedData = {};
