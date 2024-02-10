@@ -157,9 +157,11 @@ document.addEventListener("DOMContentLoaded", function() {
       if (!isDeselection) {
         console.log(`Adding adjacent hours...`);
 
-        const adjacentHours = [23, 0];
-
-        for (const adjacentHour of adjacentHours) {
+        const firstHour = selectedHours[0];
+        const lastHour = selectedHours[selectedHours.length - 1];
+    
+    
+        for (const adjacentHour of [firstHour - 1 % 24, lastHour + 1 % 24]) {
           console.log(`Checking adjacent hour: ${adjacentHour}`);
 
           if (!currentlySelectedHours.has(adjacentHour)) {
@@ -236,35 +238,47 @@ function addTimeRange(hour, date, data, selectedDate) {
         addTimeRange(hour, selectedDate, data, isPrevDay);
       }
     }
-function removeTimeRange(hour, date, data, selectedDate) {
+
+    function adjustDateForHour(hour, date) {
+      let newDate = new Date(date);
+      if (hour === 23) { // Transition to the next day for 23h à 0h
+          newDate.setDate(date.getDate() + 1);
+      } else if (hour === 0) { // Consider the previous day for 0h à 1h
+          newDate.setDate(date.getDate() - 1);
+      }
+      return newDate;
+  }
+
+  
+  function removeTimeRange(hour, date, data) {
     console.log(`Attempting to remove time range for hour ${hour} on date ${date}`);
 
-    // Convert the selectedDate string to a Date object if it's not already one
-    let targetDate = (typeof selectedDate === 'string') ? new Date(selectedDate) : new Date(selectedDate.getTime());
+    // Initially, assume the target date is the same as the input date.
+    let targetDate = new Date(date);
 
-    // Adjust targetDate based on the hour, considering overflow into the next or previous day
-    targetDate = adjustDateForHour(hour, targetDate);
+    
 
-    // Only proceed with removal if the hour is not adjacent to selected hours
-    if (!isAdjacentToSelected(hour, data, targetDate)) {
-        console.log(`Removing time range for hour ${hour} on date ${targetDate.toISOString().split('T')[0]}`);
-        removeRangeFromData(hour, targetDate, data);
+    // Ensure the formatted date string is in ISO format (YYYY-MM-DD) for consistency in data keys.
+    const formattedDate = targetDate.toISOString().split('T')[0];
+
+    // Construct the time range string for removal.
+    const timeRange = `${hour}h à ${(hour + 1) % 24}h`;
+
+    // Proceed to remove the time range if it exists for the given date.
+    if (data[formattedDate]) {
+        const index = data[formattedDate].indexOf(timeRange);
+        if (index !== -1) {
+            // If the time range exists, remove it.
+            data[formattedDate].splice(index, 1);
+            console.log(`Removed time range ${timeRange} for date ${formattedDate}.`);
+        } else {
+            console.log(`Time range ${timeRange} not found for date ${formattedDate}, no action taken.`);
+        }
     } else {
-        console.log(`Skipping removal of adjacent hour ${hour} on date ${targetDate.toISOString().split('T')[0]}`);
+        console.log(`No time ranges found for date ${formattedDate}, nothing to remove.`);
     }
 }
 
-function adjustDateForHour(hour, date) {
-    let newDate = new Date(date);
-    if (hour < 0) {
-        newDate.setDate(date.getDate() - 1);
-        hour = 23;
-    } else if (hour > 23) {
-        newDate.setDate(date.getDate() + 1);
-        hour = 0;
-    }
-    return newDate;
-}
 
 function removeRangeFromData(hour, date, data) {
     const formattedDate = formatDateKey(date);
