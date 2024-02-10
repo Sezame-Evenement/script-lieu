@@ -82,76 +82,70 @@ document.addEventListener("DOMContentLoaded", function() {
     const dateIndex = containerId === 'container1' ? 0 : 1;
     const selectedDate = selectedDates[dateIndex];
     if (!selectedDate) return;
-
+  
     const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
     const checkboxContainer = $(`.checkbox-container[data-id='${containerId}']`);
   
-    // Change to capture selected hours as an array
-    let selectedHours = [];
+    const previouslySelectedHours = new Set(); // Track previously selected hours for adjacent logic
+    if (dataToUpdate[formattedSelectedDate]) {
+      dataToUpdate[formattedSelectedDate].forEach(range => {
+        const startHour = parseInt(range.split('h')[0]);
+        previouslySelectedHours.add(startHour);
+      });
+    }
+  
+    const currentlySelectedHours = new Set(); // Track currently selected hours for adjacent logic
     checkboxContainer.find('.checkbox-hour:checked').each(function() {
-        const hour = parseInt(this.value.split(':')[0]);
-        selectedHours.push(hour);
+      const hour = parseInt(this.value.split(':')[0]);
+      currentlySelectedHours.add(hour);
     });
-
-    // Process the selected hours to include adjacent hours
-    selectedHours = addAdjacentHours(selectedHours);
-
-    // Update data for each hour including adjacent hours
-    selectedHours.forEach(hour => {
-        if (!dataToUpdate[formattedSelectedDate]) {
-            dataToUpdate[formattedSelectedDate] = [];
-        }
-        const range = `${hour}h à ${(hour + 1) % 24}h`;
-        if (!dataToUpdate[formattedSelectedDate].includes(range)) {
-            dataToUpdate[formattedSelectedDate].push(range);
-        }
-    });
-
+  
+    for (let hour = 0; hour < 24; hour++) {
+      handleTimeSlot(hour, formattedSelectedDate, dataToUpdate, selectedDate, currentlySelectedHours, previouslySelectedHours);
+    }
+  
     mergeDataAndUpdateInput();
-}
-
-// Function to add adjacent hours
-function addAdjacentHours(hoursArray) {
-    let withAdjacentHours = new Set();
-    hoursArray.forEach(hour => {
-        withAdjacentHours.add(hour); // Add the original hour
-        withAdjacentHours.add((hour + 23) % 24); // Add previous hour
-        withAdjacentHours.add((hour + 1) % 24); // Add next hour
+  }
+  
+  
+  
+  function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours) {
+    // Store selected hours in an array
+    const selectedHours = [];
+    checkboxContainer.find('.checkbox-hour:checked').each(function() {
+      const hour = parseInt(this.value.split(':')[0]);
+      selectedHours.push(hour);
     });
-    return Array.from(withAdjacentHours); // Convert back to array
-}
-  
-  
-  
-  function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
-    const isSelected = currentlySelectedHours.has(hour);
-    const wasSelected = previouslySelectedHours.has(hour);
-    const allSelectedHours = new Set([...currentlySelectedHours, ...previouslySelectedHours]);
   
     // Adjusted logic for determining adjacency
     const getAdjacentHours = hour => [(hour + 23) % 24, (hour + 1) % 24];
   
-    if (isSelected && !wasSelected) {
-      addTimeRange(hour, date, data, selectedDate);
-      const adjacentHours = getAdjacentHours(hour);
-      adjacentHours.forEach(adjacentHour => {
-        if (!allSelectedHours.has(adjacentHour)) {
+    // Add adjacent hours if needed
+    for (const selectedHour of selectedHours) {
+      const adjacentHours = getAdjacentHours(selectedHour);
+      for (const adjacentHour of adjacentHours) {
+        if (!currentlySelectedHours.includes(adjacentHour)) {
           addTimeRange(adjacentHour, date, data, selectedDate);
         }
-      });
-    } else if (!isSelected && wasSelected) {
-      // Deselection may require more nuanced handling
-      removeTimeRange(hour, date, data, selectedDate);
-      // Check if adjacent hours should remain
-      getAdjacentHours(hour).forEach(adjacentHour => {
-        if (allSelectedHours.has(adjacentHour)) {
-          const furtherAdjacentHours = getAdjacentHours(adjacentHour).filter(h => h !== hour);
-          const shouldKeep = furtherAdjacentHours.some(furtherAdjacentHour => currentlySelectedHours.has(furtherAdjacentHour));
-          if (!shouldKeep) {
-            removeTimeRange(adjacentHour, date, data, selectedDate);
+      }
+    }
+  
+    // Deselection may require more nuanced handling
+    for (const selectedHour of selectedHours) {
+      if (!currentlySelectedHours.includes(selectedHour)) {
+        removeTimeRange(selectedHour, date, data, selectedDate);
+        // Check if adjacent hours should remain
+        const adjacentHours = getAdjacentHours(selectedHour);
+        for (const adjacentHour of adjacentHours) {
+          if (currentlySelectedHours.includes(adjacentHour)) {
+            const furtherAdjacentHours = getAdjacentHours(adjacentHour).filter(h => h !== selectedHour);
+            const shouldKeep = furtherAdjacentHours.some(furtherAdjacentHour => selectedHours.includes(furtherAdjacentHour));
+            if (!shouldKeep) {
+              removeTimeRange(adjacentHour, date, data, selectedDate);
+            }
           }
         }
-      });
+      }
     }
   }
   
