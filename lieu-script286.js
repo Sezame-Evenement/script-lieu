@@ -107,36 +107,51 @@ document.addEventListener("DOMContentLoaded", function() {
       const isSelected = currentlySelectedHours.has(hour);
       const wasSelected = previouslySelectedHours.has(hour);
   
-      console.log(`Handling hour: ${hour}, isSelected: ${isSelected}, wasSelected: ${wasSelected}, on date: ${formattedDate}`);
-  
       if (isSelected && !wasSelected) {
+          // Adding a newly selected hour
           console.log(`[Add] New selection: ${hour}h on date: ${formattedDate}`);
           addTimeRange(hour, formattedDate, dataToUpdate, selectedDate);
   
-          // Recalculate the sorted selected hours after adding the new hour
-          let allSelectedHours = new Set([...currentlySelectedHours, hour]);
-          let sortedSelectedHours = Array.from(allSelectedHours).sort((a, b) => a - b);
-  
-          // Identify the first and last hours in the current selection
+          // After adding, determine the full range of current selections to decide on adjacent hours
+          currentlySelectedHours.add(hour); // Temporarily ensure the current set is up-to-date for this calculation
+          let sortedSelectedHours = Array.from(currentlySelectedHours).sort((a, b) => a - b);
           let firstHour = sortedSelectedHours[0];
           let lastHour = sortedSelectedHours[sortedSelectedHours.length - 1];
   
-          // Add adjacent hours if the selected hour is now the first or last in the range
-          if (hour === firstHour && !previouslySelectedHours.has(firstHour - 1)) {
-              console.log(`[Add] Adjacent hour before the range: ${firstHour - 1}`);
+          // Add adjacent hours if not already present
+          if (!currentlySelectedHours.has(firstHour - 1)) {
+              console.log(`[Add] Adding adjacent hour before: ${firstHour - 1}`);
               addTimeRange(firstHour - 1, formattedDate, dataToUpdate, selectedDate);
           }
-          if (hour === lastHour && !previouslySelectedHours.has(lastHour + 1)) {
-              console.log(`[Add] Adjacent hour after the range: ${lastHour + 1}`);
+          if (!currentlySelectedHours.has(lastHour + 1)) {
+              console.log(`[Add] Adding adjacent hour after: ${lastHour + 1}`);
               addTimeRange(lastHour + 1, formattedDate, dataToUpdate, selectedDate);
           }
       } else if (!isSelected && wasSelected) {
+          // Removing a deselected hour
           console.log(`[Remove] Deselection: ${hour}h on date: ${formattedDate}`);
           removeTimeRange(hour, formattedDate, dataToUpdate, selectedDate);
   
-          // Removing logic for adjacent hours is simplified and should be adjusted based on specific rules
+          // Remove the deselected hour from tracking to reevaluate adjacent hours
+          currentlySelectedHours.delete(hour);
+  
+          // Reevaluate adjacent hours after removal
+          let sortedSelectedHours = Array.from(currentlySelectedHours).sort((a, b) => a - b);
+          let firstHour = sortedSelectedHours[0];
+          let lastHour = sortedSelectedHours[sortedSelectedHours.length - 1];
+  
+          // Remove adjacent hours if they are no longer valid
+          if (firstHour !== undefined && !currentlySelectedHours.has(firstHour - 1)) {
+              console.log(`[Remove] Removing now-invalid adjacent hour before: ${firstHour - 1}`);
+              removeTimeRange(firstHour - 1, formattedDate, dataToUpdate, selectedDate);
+          }
+          if (lastHour !== undefined && !currentlySelectedHours.has(lastHour + 1)) {
+              console.log(`[Remove] Removing now-invalid adjacent hour after: ${lastHour + 1}`);
+              removeTimeRange(lastHour + 1, formattedDate, dataToUpdate, selectedDate);
+          }
       }
   }
+  
   
   
   
