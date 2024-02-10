@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
     const checkboxContainer = $(`.checkbox-container[data-id='${containerId}']`);
   
-    const previouslySelectedHours = new Set(); // Track previously selected hours for adjacent logic
+    const previouslySelectedHours = new Set();
     if (dataToUpdate[formattedSelectedDate]) {
       dataToUpdate[formattedSelectedDate].forEach(range => {
         const startHour = parseInt(range.split('h')[0]);
@@ -94,18 +94,31 @@ document.addEventListener("DOMContentLoaded", function() {
       });
     }
   
-    const currentlySelectedHours = new Set(); // Track currently selected hours for adjacent logic
+    const currentlySelectedHours = new Set();
     checkboxContainer.find('.checkbox-hour:checked').each(function() {
       const hour = parseInt(this.value.split(':')[0]);
       currentlySelectedHours.add(hour);
     });
   
+    // Handle adjacent hours:
+    for (let hour = 0; hour < 24; hour++) {
+      if (currentlySelectedHours.has(hour)) {
+        const hourBefore = (hour + 23) % 24;
+        const hourAfter = (hour + 1) % 24;
+        currentlySelectedHours.add(hourBefore);
+        currentlySelectedHours.add(hourAfter);
+        handleEdgeCases(hour, formattedSelectedDate, dataToUpdate, selectedDate, hourBefore, hourAfter);
+      }
+    }
+  
+    // Update data based on currentlySelectedHours
     for (let hour = 0; hour < 24; hour++) {
       handleTimeSlot(hour, formattedSelectedDate, dataToUpdate, selectedDate, currentlySelectedHours, previouslySelectedHours);
     }
   
     mergeDataAndUpdateInput();
   }
+  
   
   
   
@@ -217,18 +230,28 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     
     function handleEdgeCases(hour, date, data, selectedDate, isPrevDay, isNextDay) {
+      // Handle edge cases for day transitions at hour 0 and hour 23
       if (isPrevDay && hour === 0) {
         addTimeRangeIfNecessary(23, data, selectedDate, true);
       } else if (isNextDay && hour === 23) {
         addTimeRangeIfNecessary(0, data, selectedDate, false);
       }
     
-      if (isPrevDay || isNextDay) {
+      // Adjusted logic to fill in missing time ranges, considering both isPrevDay and isNextDay
+      if (isPrevDay) {
+        // If the previous day, loop backwards from hour to 0
+        for (let i = hour - 1; i >= 0; i--) {
+          addTimeRangeIfNecessary(i, data, selectedDate, true);
+        }
+      }
+      if (isNextDay) {
+        // If the next day, loop forwards from hour to 23
         for (let i = hour + 1; i < 24; i++) {
-          addTimeRangeIfNecessary(i, data, selectedDate, isPrevDay);
+          addTimeRangeIfNecessary(i, data, selectedDate, false);
         }
       }
     }
+    
     
     function addTimeRangeIfNecessary(hour, data, selectedDate, isPrevDay) {
       const formattedDate = selectedDate.toLocaleDateString('fr-CA');
