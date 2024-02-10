@@ -106,56 +106,136 @@ document.addEventListener("DOMContentLoaded", function() {
   
     mergeDataAndUpdateInput();
   }
+  
+  
+  function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
+    console.log("------------------");
+    console.log("Parameters:");
+    console.log(`- hour: ${hour}`);
+    console.log(`- date: ${date}`);
+    console.log(`- data: `, data); // Log data object structure if helpful
+    console.log(`- selectedDate: ${selectedDate}`);
+    console.log(`- currentlySelectedHours:`, currentlySelectedHours); // Log set elements
+    console.log(`- previouslySelectedHours:`, previouslySelectedHours); // Log set elements
+    console.log("------------------");
+    const isSelected = currentlySelectedHours.has(hour);
+    const wasSelected = previouslySelectedHours.has(hour);
+    console.log(`- isSelected: ${isSelected}`);
+console.log(`- wasSelected: ${wasSelected}`);
+  
+    // Track all selected hours as an array and sort them chronologically
+    const selectedHours = Array.from(currentlySelectedHours).sort((a, b) => a - b);
+    console.log(`- selectedHours:`, selectedHours);
 
+  
+    // Calculate adjacent hours considering edge cases
+    const hourBefore = (hour + 23) % 24;
+    const hourAfter = (hour + 1) % 24;
+    console.log(`- hourBefore: ${hourBefore}`);
+console.log(`- hourAfter: ${hourAfter}`);
+  
+    if (isSelected && !wasSelected &&
+      (hour === selectedHours[0] ||
+       (hour > selectedHours[0] && hourBefore > selectedHours[selectedHours.length - 1]))) {
+        console.log("Adding time range...");
 
-  function handleTimeSlot(hour, selectedDate, data) {
-    if (!data[selectedDate]) {
-        data[selectedDate] = [];
+    // Handle edge case: previous day if necessary
+    if (hour === selectedHours[0] && hourBefore > selectedHours[selectedHours.length - 1]) {
+      const prevDate = new Date(selectedDate);
+      prevDate.setDate(prevDate.getDate() - 1);
+      addTimeRange(hourBefore, prevDate.toLocaleDateString('fr-CA'), data, prevDate);
+    } else {
+      addTimeRange(hourBefore, date, data, selectedDate);
     }
+  }
 
-    const hourInt = parseInt(hour, 10);
-    // Adjust the array to include only the selected hour and its immediate adjacent hours
-    const hoursToAdd = [
-        hourInt === 0 ? 23 : hourInt - 1,
-        hourInt,
-        hourInt === 23 ? 0 : hourInt + 1
-    ];
+  // Add hourAfter if necessary
+  if (isSelected && !wasSelected &&
+      (hour === selectedHours[selectedHours.length - 1] ||
+       (hour < selectedHours[selectedHours.length - 1] && hourAfter < selectedHours[0]))) {
+        console.log("Adding time range...");
 
-    hoursToAdd.forEach(h => {
-        const timeRange = `${h}h à ${(h + 1) % 24}h`;
-        if (!data[selectedDate].includes(timeRange)) {
-            data[selectedDate].push(timeRange);
+        
+    // Handle edge case: next day if necessary
+    if (hour === selectedHours[selectedHours.length - 1] && hourAfter < selectedHours[0]) {
+      const nextDate = new Date(selectedDate);
+      nextDate.setDate(nextDate.getDate() + 1);
+      addTimeRange(hourAfter, nextDate.toLocaleDateString('fr-CA'), data, nextDate);
+    } else {
+      addTimeRange(hourAfter, date, data, selectedDate);
+    }
+  }
+  
+    // Handle deselection
+    else if (!isSelected && wasSelected) {
+      console.log("Removing time range...");
+
+      removeTimeRange(hour, date, data, selectedDate);
+  
+      // Remove hour before only if it was added due to the previous selection
+      if (previouslySelectedHours.has(hourBefore) &&
+          !currentlySelectedHours.has(hourBefore) &&
+          (hourBefore === selectedHours[0] || hourBefore > selectedHours[selectedHours.length - 1])) {
+        // Handle edge case: remove from previous day
+        if (hourBefore === selectedHours[0] && hourBefore > selectedHours[selectedHours.length - 1]) {
+          const prevDate = new Date(selectedDate);
+          prevDate.setDate(prevDate.getDate() - 1);
+          removeTimeRange(hourBefore, prevDate.toLocaleDateString('fr-CA'), data, prevDate);
+        } else {
+          removeTimeRange(hourBefore, date, data, selectedDate);
         }
-    });
-}
-
-
-
-
-
-
-
-
-function getAdjacentHours(hour) {
-    return [(hour - 1 + 24) % 24, (hour + 1) % 24];
-}
-
-
-function addTimeRange(hour, date, data, selectedDate) {
-  if (!data[selectedDate]) {
-      data[selectedDate] = [];
+      }
+  
+      // Remove hour after only if it was added due to the previous selection
+      if (previouslySelectedHours.has(hourAfter) &&
+          !currentlySelectedHours.has(hourAfter) &&
+          (hourAfter === selectedHours[selectedHours.length - 1] || hourAfter < selectedHours[0])) {
+        // Handle edge case: remove from next day
+        if (hourAfter === selectedHours[selectedHours.length - 1] && hourAfter < selectedHours[0]) {
+          const nextDate = new Date(selectedDate);
+          nextDate.setDate(nextDate.getDate() + 1);
+          removeTimeRange(hourAfter, nextDate.toLocaleDateString('fr-CA'), data, nextDate);
+        } else {
+          removeTimeRange(hourAfter, date, data, selectedDate);
+        }
+      }
+    }
   }
-  const formattedHour = hour < 10 ? `0${hour}` : hour;
-  const nextHour = (hour + 1) % 24;
-  const formattedNextHour = nextHour < 10 ? `0${nextHour}` : nextHour;
-  const timeRange = `${formattedHour}h à ${formattedNextHour}h`;
+  
+  
+    
+    
+  
+  
+  
+  function addTimeRange(hour, date, data, selectedDate, isPrevDay = false, isNextDay = false) {
+              console.log(`Adding time range for hour ${hour} on date ${date}`);
 
-  if (!data[selectedDate].includes(timeRange)) {
-      data[selectedDate].push(timeRange);
-  }
-}
-
-
+      if (hour < 0) {
+        hour = 23;
+        isPrevDay = true;
+      } else if (hour > 23) {
+        hour = 0;
+        isNextDay = true;
+      }
+    
+      const targetDate = new Date(selectedDate);
+      if (isPrevDay) {
+        targetDate.setDate(targetDate.getDate() - 1);
+      } else if (isNextDay) {
+        targetDate.setDate(targetDate.getDate() + 1);
+      }
+      const targetFormattedDate = targetDate.toLocaleDateString('fr-CA');
+      const endHour = (hour + 1) % 24;
+      const range = `${hour}h à ${endHour}h`;
+    
+      data[targetFormattedDate] = data[targetFormattedDate] || [];
+      if (!data[targetFormattedDate].includes(range)) {
+        data[targetFormattedDate].push(range);
+      }
+    
+      handleEdgeCases(hour, date, data, selectedDate, isPrevDay, isNextDay);
+    }
     
     function handleEdgeCases(hour, date, data, selectedDate, isPrevDay, isNextDay) {
       if (isPrevDay && hour === 0) {
