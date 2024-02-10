@@ -193,43 +193,19 @@ function addTimeRange(hour, date, data, selectedDate) {
       data[selectedDate] = [];
   }
 
-  // Function to format hour without leading zero
-  const formatHour = h => h < 10 ? `${h}` : `${h}`;
+  // Adjust formatting to remove leading zeros
+  const formattedHour = hour < 10 ? `${hour}` : `${hour}`;
+  const nextHour = (hour + 1) % 24;
+  const formattedNextHour = nextHour < 10 ? `${nextHour}` : `${nextHour}`;
 
-  // Add the selected hour range
-  let formattedHour = formatHour(hour);
-  let nextHour = (hour + 1) % 24;
-  let formattedNextHour = formatHour(nextHour);
-  let timeRange = `${formattedHour}h à ${formattedNextHour}h`;
+  // Construct the time range string without leading zeros
+  const timeRange = `${formattedHour}h à ${formattedNextHour}h`;
 
-  if (!data[selectedDate].includes(timeRange)) {
-      data[selectedDate].push(timeRange);
+  if (hour < 23 && !data[selectedDate].includes(`${hour}h à ${(hour + 1).toString().padStart(2, '0')}h`)) {
+    data[selectedDate].push(`${hour}h à ${(hour + 1).toString().padStart(2, '0')}h`);
+
+
   }
-
-  // Add the hour before the selected hour, if not already present
-  let previousHour = hour - 1 < 0 ? 23 : hour - 1;
-  let formattedPreviousHour = formatHour(previousHour);
-  let previousTimeRange = `${formattedPreviousHour}h à ${formattedHour}h`;
-
-  if (!data[selectedDate].includes(previousTimeRange)) {
-      data[selectedDate].insert(0, previousTimeRange); // Insert at the start
-  }
-
-  // Ensure to add the hour after the selected hour, if not already present
-  let afterNextHour = (nextHour + 1) % 24;
-  let formattedAfterNextHour = formatHour(afterNextHour);
-  let afterTimeRange = `${formattedNextHour}h à ${formattedAfterNextHour}h`;
-
-  if (!data[selectedDate].includes(afterTimeRange)) {
-      data[selectedDate].push(afterTimeRange); // Append to the end
-  }
-
-  // Sort the array to ensure the hours are in the correct order
-  data[selectedDate].sort((a, b) => {
-      let startHourA = parseInt(a.split('h')[0], 10);
-      let startHourB = parseInt(b.split('h')[0], 10);
-      return startHourA - startHourB;
-  });
 }
 
 
