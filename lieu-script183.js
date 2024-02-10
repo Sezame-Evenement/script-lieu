@@ -112,36 +112,34 @@ document.addEventListener("DOMContentLoaded", function() {
   function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
     const isSelected = currentlySelectedHours.has(hour);
     const wasSelected = previouslySelectedHours.has(hour);
-    // Consolidate all currently and previously selected hours for comprehensive adjacency checks.
     const allSelectedHours = new Set([...currentlySelectedHours, ...previouslySelectedHours]);
   
-    // Define a function to determine adjacent hours.
+    // Adjusted logic for determining adjacency
     const getAdjacentHours = hour => [(hour + 23) % 24, (hour + 1) % 24];
   
     if (isSelected && !wasSelected) {
-      // Add the selected hour and its adjacent hours if not already selected.
       addTimeRange(hour, date, data, selectedDate);
-      getAdjacentHours(hour).forEach(adjacentHour => {
+      const adjacentHours = getAdjacentHours(hour);
+      adjacentHours.forEach(adjacentHour => {
         if (!allSelectedHours.has(adjacentHour)) {
           addTimeRange(adjacentHour, date, data, selectedDate);
         }
       });
     } else if (!isSelected && wasSelected) {
-      // Remove the deselected hour. Adjacent hours removal needs careful handling.
+      // Deselection may require more nuanced handling
       removeTimeRange(hour, date, data, selectedDate);
-      // Temporarily remove the deselected hour from the set for accurate adjacency checks.
-      allSelectedHours.delete(hour);
+      // Check if adjacent hours should remain
       getAdjacentHours(hour).forEach(adjacentHour => {
-        // Check if the adjacent hour is still adjacent to any other selected hour.
-        const isStillAdjacent = getAdjacentHours(adjacentHour).some(h => allSelectedHours.has(h));
-        if (!isStillAdjacent && previouslySelectedHours.has(adjacentHour)) {
-          // Only remove the adjacent hour if it's no longer adjacent to any selection.
-          removeTimeRange(adjacentHour, date, data, selectedDate);
+        if (allSelectedHours.has(adjacentHour)) {
+          const furtherAdjacentHours = getAdjacentHours(adjacentHour).filter(h => h !== hour);
+          const shouldKeep = furtherAdjacentHours.some(furtherAdjacentHour => currentlySelectedHours.has(furtherAdjacentHour));
+          if (!shouldKeep) {
+            removeTimeRange(adjacentHour, date, data, selectedDate);
+          }
         }
       });
     }
   }
-  
   
   
 
@@ -153,7 +151,27 @@ function getAdjacentHours(hour) {
 }
   
     
-    
+function updateAdjacentHours(currentlySelectedHours, dataToUpdate, formattedSelectedDate) {
+  const hoursArray = Array.from(currentlySelectedHours).sort((a, b) => a - b);
+  for (let i = 0; i < hoursArray.length; i++) {
+      let currentHour = hoursArray[i];
+      // Check if the hour before is missing
+      if (i === 0 || hoursArray[i - 1] !== currentHour - 1) {
+          const hourBefore = (currentHour + 23) % 24;
+          if (!currentlySelectedHours.has(hourBefore)) {
+              addTimeRange(hourBefore, formattedSelectedDate, dataToUpdate, true);
+          }
+      }
+      // Check if the hour after is missing
+      if (i === hoursArray.length - 1 || hoursArray[i + 1] !== currentHour + 1) {
+          const hourAfter = (currentHour + 1) % 24;
+          if (!currentlySelectedHours.has(hourAfter)) {
+              addTimeRange(hourAfter, formattedSelectedDate, dataToUpdate, false);
+          }
+      }
+  }
+}
+
   
   
   
