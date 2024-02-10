@@ -83,6 +83,8 @@ document.addEventListener("DOMContentLoaded", function() {
   }
   });
   function updateFirstDateInput(selectedDates, containerId) {
+    console.log(`[updateFirstDateInput] Selected dates:`, selectedDates.map(d => d.toLocaleDateString('fr-CA')), `Container ID: ${containerId}`);
+
     let dataToUpdate = containerId === 'container1' ? container1Data : container2Data;
     const dateIndex = containerId === 'container1' ? 0 : 1;
     const selectedDate = selectedDates[dateIndex];
@@ -106,6 +108,8 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   
     for (let hour = 0; hour < 24; hour++) {
+      console.log(`[updateFirstDateInput] Handling time slot for date: ${formattedSelectedDate}, Hour: ${hour}, Container ID: ${containerId}`);
+
       handleTimeSlot(hour, formattedSelectedDate, dataToUpdate, selectedDate, currentlySelectedHours, previouslySelectedHours);
     }
   
@@ -117,8 +121,10 @@ document.addEventListener("DOMContentLoaded", function() {
     return [(hour - 1 + 24) % 24, (hour + 1) % 24];
   }
   
-  console.log("Selected date before handling time slot:", selectedDate.toLocaleDateString('fr-CA'));
+  const formattedSelectedDate = selectedDate.toLocaleDateString('fr-CA');
+  console.log(`[updateFirstDateInput] Formatted selected date for ${containerId}:`, formattedSelectedDate);
 
+  
 
   function handleTimeSlot(hour, date, data, selectedDate, currentlySelectedHours, previouslySelectedHours) {
 
