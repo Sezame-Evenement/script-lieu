@@ -279,6 +279,32 @@ function updateAdjacentHours(currentlySelectedHours, formattedDate, dataToUpdate
   
   $('.firstdateinput').val(JSON.stringify(mergedData));
   }
+
+  function mergeDataAndUpdateInputForDateFullDisabled() {
+    let mergedData = {};
+  
+    // Only merge data from container1Data and container2Data, deliberately excluding existing data
+    let allDates = new Set([...Object.keys(container1Data), ...Object.keys(container2Data)]);
+  
+    allDates.forEach(date => {
+      let dataFromContainer1 = container1Data[date] || [];
+      let dataFromContainer2 = container2Data[date] || [];
+      
+      // No existing data considered here
+      mergedData[date] = [...new Set([...dataFromContainer1, ...dataFromContainer2])];
+    });
+  
+    // Remove dates with no data
+    for (let date in mergedData) {
+      if (mergedData[date].length === 0) {
+        delete mergedData[date];
+      }
+    }
+  
+    // Assuming #datefulldisabled is an input where you want to store the JSON string
+    $('#datefulldisabled').val(JSON.stringify(mergedData));
+  }
+  
   
   
   
@@ -287,39 +313,6 @@ function updateAdjacentHours(currentlySelectedHours, formattedDate, dataToUpdate
   const existingDataElement = document.querySelector('.paragraph-dhours');
   return existingDataElement ? parseJson(existingDataElement.textContent.trim()) : {};
   }
-
-
-
-
-    // Modified mergeDataAndUpdateInput to update datefulldisabled
-    function mergeDataAndUpdateInputForDateFullDisabled() {
-        let mergedData = {};
-        
-        // Merge container1Data and container2Data without using paragraph-dhours data
-        let allDates = new Set([...Object.keys(container1Data), ...Object.keys(container2Data)]);
-        
-        allDates.forEach(date => {
-            let dataFromContainer1 = container1Data[date] || [];
-            let dataFromContainer2 = container2Data[date] || [];
-            
-            // Merge and deduplicate ranges from both containers
-            mergedData[date] = [...new Set([...dataFromContainer1, ...dataFromContainer2])];
-        });
-        
-        // Clean up dates with no data
-        for (let date in mergedData) {
-            if (mergedData[date].length === 0) {
-                delete mergedData[date];
-            }
-        }
-        
-        // Update datefulldisabled input field
-        document.querySelector('.datefulldisabled').value = JSON.stringify(mergedData);
-    }
-
-    
-
-
   
   function parseJson(jsonString) {
   try { return JSON.parse(jsonString); }
