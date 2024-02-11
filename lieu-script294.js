@@ -11,32 +11,32 @@ document.addEventListener("DOMContentLoaded", function() {
   return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
   }],
   onChange: function(selectedDates) {
-  if (selectedDates.length > 0) {
-  initialSelectedDate = selectedDates[0];
-  $(".date-heading").eq(0).text(formatDate(selectedDates[0]));
-  updateCheckboxOptions(selectedDates, "container1");
-  updateMoreDaysButton(selectedDates);
-  }
+    if (selectedDates.length > 0) {
+      initialSelectedDate = selectedDates[0];
+      $(".date-heading").eq(0).text(formatDate(selectedDates[0]));
+      updateCheckboxOptions(selectedDates, "container1");
+      updateMoreDaysButton(selectedDates);
+      // Update for the first date input and the full disabled input
+      mergeDataAndUpdateInput('.firstdateinput'); // Include existing data
+      mergeDataAndUpdateInput('#datefulldisabled'); // Exclude existing data
+    }
   
-  if (secondContainerVisible) {
-  $(".checkbox-container").eq(1).hide();
-  $(".date-heading").eq(1).hide();
-  secondContainerVisible = false;
-  }
+    if (secondContainerVisible) {
+      $(".checkbox-container").eq(1).hide();
+      $(".date-heading").eq(1).hide();
+      secondContainerVisible = false;
+    }
   
-  if (selectedDates.length > 1) {
-  const secondDate = selectedDates[1];
-  const secondCheckboxContainer = $(".checkbox-container[data-id='container2']");
-  secondCheckboxContainer.html($(".checkbox-container[data-id='container1']").html());
-  updateCheckboxOptions([secondDate], "container2");
-  $(".date-heading").eq(1).text(formatDate(secondDate));
-  $(".date-heading").eq(1).show();
-  secondCheckboxContainer.show();
-  secondContainerVisible = true;
-  }
-  
-  mergeDataAndUpdateInput();
-  }
+    if (selectedDates.length > 1) {
+      const secondDate = selectedDates[1];
+      const secondCheckboxContainer = $(".checkbox-container[data-id='container2']");
+      secondCheckboxContainer.html($(".checkbox-container[data-id='container1']").html());
+      updateCheckboxOptions([secondDate], "container2");
+      $(".date-heading").eq(1).text(formatDate(secondDate));
+      $(".date-heading").eq(1).show();
+      secondCheckboxContainer.show();
+      secondContainerVisible = true;
+  } }
   });
   
   
@@ -62,6 +62,9 @@ document.addEventListener("DOMContentLoaded", function() {
   $(".date-heading").eq(1).text(formatDate(nextDay));
   $(".date-heading").eq(1).show();
   }
+
+  mergeDataAndUpdateInput('.firstdateinput');
+  mergeDataAndUpdateInput('#datefulldisabled');
   });
   
   const firstDateInput = document.querySelector('.firstdateinput');
@@ -70,6 +73,8 @@ document.addEventListener("DOMContentLoaded", function() {
   const containerId = $(event.target).closest('.checkbox-container').data('id');
   const selectedDates = dateInput.selectedDates;
   updateFirstDateInput(selectedDates, containerId);
+  mergeDataAndUpdateInput('.firstdateinput');
+  mergeDataAndUpdateInput('#datefulldisabled');
   }
   });
   function updateFirstDateInput(selectedDates, containerId) {
@@ -256,17 +261,23 @@ function updateAdjacentHours(currentlySelectedHours, formattedDate, dataToUpdate
   }
   
   
-  function mergeDataAndUpdateInput(includeExistingData = true) {
+  function mergeDataAndUpdateInput(targetInputSelector) {
     let mergedData = {};
   
-    // Conditionally get existing data based on the new parameter
+    // Determine if existing data should be fetched based on the target input selector
+    const includeExistingData = targetInputSelector !== '#datefulldisabled';
     const existingData = includeExistingData ? getExistingData() : {};
-    let allDates = new Set([...Object.keys(container1Data), ...Object.keys(container2Data), ...Object.keys(existingData)]);
+  
+    let allDates = new Set([
+      ...Object.keys(container1Data),
+      ...Object.keys(container2Data),
+      ...Object.keys(existingData), // This will be an empty object if includeExistingData is false
+    ]);
   
     allDates.forEach(date => {
       let dataFromContainer1 = container1Data[date] || [];
       let dataFromContainer2 = container2Data[date] || [];
-      let existingDataForDate = existingData[date] || [];
+      let existingDataForDate = existingData[date] || []; // This will be empty if includeExistingData is false
   
       mergedData[date] = [...new Set([...dataFromContainer1, ...dataFromContainer2, ...existingDataForDate])];
     });
@@ -277,8 +288,7 @@ function updateAdjacentHours(currentlySelectedHours, formattedDate, dataToUpdate
       }
     }
   
-    // Update to dynamically set the value based on includeExistingData
-    const targetInputSelector = includeExistingData ? '.firstdateinput' : '#datefulldisabled';
+    // Use the targetInputSelector to dynamically target the input field for updating
     $(targetInputSelector).val(JSON.stringify(mergedData));
   }
   
