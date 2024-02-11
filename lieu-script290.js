@@ -289,8 +289,7 @@ function updateAdjacentHours(currentlySelectedHours, formattedDate, dataToUpdate
   }
 
 
-  document.addEventListener("DOMContentLoaded", function() {
-    // Existing initializations and functions...
+
 
     // Modified mergeDataAndUpdateInput to update datefulldisabled
     function mergeDataAndUpdateInputForDateFullDisabled() {
