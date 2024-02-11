@@ -317,13 +317,9 @@ function updateAdjacentHours(currentlySelectedHours, formattedDate, dataToUpdate
         document.querySelector('.datefulldisabled').value = JSON.stringify(mergedData);
     }
 
-    // Ensure mergeDataAndUpdateInputForDateFullDisabled is called at appropriate times
-    // For example, after container data updates or adjacent hour logic:
-    // - Inside updateFirstDateInput after mergeDataAndUpdateInput call
-    // - After addTimeRange and removeTimeRange if affecting datefulldisabled
+    
 
-    // Note: Adjust existing event listeners and function calls to include mergeDataAndUpdateInputForDateFullDisabled where necessary.
-});
+
   
   function parseJson(jsonString) {
   try { return JSON.parse(jsonString); }
