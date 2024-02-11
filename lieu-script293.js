@@ -256,54 +256,34 @@ function updateAdjacentHours(currentlySelectedHours, formattedDate, dataToUpdate
   }
   
   
-  function mergeDataAndUpdateInput() {
-  let mergedData = {};
-  
-  const existingData = getExistingData();
-  let allDates = new Set([...Object.keys(container1Data), ...Object.keys(container2Data), ...Object.keys(existingData)]);
-  
-  allDates.forEach(date => {
-  let dataFromContainer1 = container1Data[date] || [];
-  let dataFromContainer2 = container2Data[date] || [];
-  let existingDataForDate = existingData[date] || [];
-  
-  mergedData[date] = [...new Set([...dataFromContainer1, ...dataFromContainer2, ...existingDataForDate])];
-  });
-  
-  
-  for (let date in mergedData) {
-  if (mergedData[date].length === 0) {
-  delete mergedData[date];
-  }
-  }
-  
-  $('.firstdateinput').val(JSON.stringify(mergedData));
-  }
-
-  function mergeDataAndUpdateInputForDateFullDisabled() {
+  function mergeDataAndUpdateInput(includeExistingData = true) {
     let mergedData = {};
   
-    // Only merge data from container1Data and container2Data, deliberately excluding existing data
-    let allDates = new Set([...Object.keys(container1Data), ...Object.keys(container2Data)]);
+    // Conditionally get existing data based on the new parameter
+    const existingData = includeExistingData ? getExistingData() : {};
+    let allDates = new Set([...Object.keys(container1Data), ...Object.keys(container2Data), ...Object.keys(existingData)]);
   
     allDates.forEach(date => {
       let dataFromContainer1 = container1Data[date] || [];
       let dataFromContainer2 = container2Data[date] || [];
-      
-      // No existing data considered here
-      mergedData[date] = [...new Set([...dataFromContainer1, ...dataFromContainer2])];
+      let existingDataForDate = existingData[date] || [];
+  
+      mergedData[date] = [...new Set([...dataFromContainer1, ...dataFromContainer2, ...existingDataForDate])];
     });
   
-    // Remove dates with no data
     for (let date in mergedData) {
       if (mergedData[date].length === 0) {
         delete mergedData[date];
       }
     }
   
-    // Assuming #datefulldisabled is an input where you want to store the JSON string
-    $('#datefulldisabled').val(JSON.stringify(mergedData));
+    // Update to dynamically set the value based on includeExistingData
+    const targetInputSelector = includeExistingData ? '.firstdateinput' : '#datefulldisabled';
+    $(targetInputSelector).val(JSON.stringify(mergedData));
   }
+  
+
+ 
   
   
   
