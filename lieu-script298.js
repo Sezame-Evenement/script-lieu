@@ -10,6 +10,13 @@ document.addEventListener("DOMContentLoaded", function() {
   return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
   }],
   onChange: function(selectedDates) {
+    // Reset stored selections for containers
+    container1Data = {};
+    container2Data = {};
+  
+    // Clear checkbox selections
+    $(".checkbox-hour:checked").prop('checked', false); // Uncheck all checkboxes
+  
     if (selectedDates.length > 0) {
       initialSelectedDate = selectedDates[0];
       $(".date-heading").eq(0).text(formatDate(selectedDates[0]));
@@ -35,7 +42,9 @@ document.addEventListener("DOMContentLoaded", function() {
       $(".date-heading").eq(1).show();
       secondCheckboxContainer.show();
       secondContainerVisible = true;
-  } }
+    }
+  }
+  
   });
   
   
