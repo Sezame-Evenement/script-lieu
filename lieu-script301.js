@@ -54,44 +54,40 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   
     const moreDaysButton = document.querySelector(".moredays");
-  moreDaysButton.addEventListener("click", function() {
-    const selectedDates = dateInput.selectedDates;
-    
-    if (!secondContainerVisible) {
-      if (selectedDates.length === 1) {
-        const nextDay = new Date(selectedDates[0]);
-        nextDay.setDate(nextDay.getDate() + 1);
-        dateInput.setDate([selectedDates[0], nextDay]); // Add next day to selection
-        secondContainerVisible = true;
+    moreDaysButton.addEventListener("click", function() {
+      const selectedDates = dateInput.selectedDates;
+      
+      if (!secondContainerVisible) {
+        // If the second container is not visible, show it and set the date to the next day
+        if (selectedDates.length === 1) {
+          const nextDay = new Date(selectedDates[0]);
+          nextDay.setDate(nextDay.getDate() + 1);
+          dateInput.setDate([selectedDates[0], nextDay]);
+          secondContainerVisible = true;
+        }
+      } else {
+        // If the second container is already visible, reset everything back to the initial state
+        dateInput.setDate([initialSelectedDate]); // Reset to the initially selected date
+        secondContainerVisible = false;
+        
+        // Clear checkbox selections
+        $(".checkbox-hour:checked").prop('checked', false);
+  
+        // Since the user clicked the second time, reset the data and input fields now
+        container1Data = {};
+        container2Data = {};
+        updateCheckboxOptions([initialSelectedDate], "container1"); // Update checkboxes for container1 based on initial date
+        $(".checkbox-container[data-id='container2']").hide();
+        $(".date-heading").eq(1).hide();
+  
+        // Reset and update the input fields to reflect only the initial date's selection
+        mergeDataAndUpdateInput('.firstdateinput'); // Update this function as needed
+        mergeDataAndUpdateInput('#datefulldisabled'); // Update this function as needed
       }
-    } else {
-      dateInput.setDate([initialSelectedDate]); // Reset to the initially selected date
-      secondContainerVisible = false;
-      // Clear checkbox selections
-      $(".checkbox-hour:checked").prop('checked', false);
-    }
-
-    // Update UI and reset container data
-    container1Data = {};
-    container2Data = {};
-
-    if (secondContainerVisible) {
-      // If showing second container, update UI and data for both dates
-      updateCheckboxOptions([selectedDates[0]], "container1");
-      updateCheckboxOptions([new Date(selectedDates[0].getTime() + 86400000)], "container2");
-      $(".checkbox-container[data-id='container2']").show();
-      $(".date-heading").eq(1).text(formatDate(new Date(selectedDates[0].getTime() + 86400000))).show();
-    } else {
-      // If hiding second container, ensure UI and data reflect only the initial date
-      $(".checkbox-container[data-id='container2']").hide();
-      $(".date-heading").eq(1).hide();
-      updateCheckboxOptions([initialSelectedDate], "container1"); // Update checkboxes for container1 based on initial date
-    }
-
-    // Reset and update the input fields to reflect the current state
-    mergeDataAndUpdateInput('.firstdateinput', true); // true to indicate resetting or updating based on current visibility/state
-    mergeDataAndUpdateInput('#datefulldisabled', false); // false or omit the flag if the function handles it internally
-  });
+  
+      // Depending on your implementation of mergeDataAndUpdateInput, 
+      // you might need to adjust it to clear or appropriately update the data for both inputs.
+    });
   
     // Other functions (updateCheckboxOptions, mergeDataAndUpdateInput, formatDate) need to be defined as before
 
