@@ -306,47 +306,44 @@ document.addEventListener("DOMContentLoaded", function() {
     
     
     function mergeDataAndUpdateInput(targetInputSelector) {
-      let mergedData = {};
+        let mergedData = {};
     
-      const includeExistingData = targetInputSelector !== '#datefulldisabled';
-      let existingData = includeExistingData ? getExistingData() : {}; // This is now always an object
+        // Determine whether to include existing data based on the target input selector
+        const includeExistingData = targetInputSelector === '.firstdateinput';
+        let existingData = includeExistingData ? getExistingData() : {}; // Fetch existing data only if needed for '.firstdateinput'
     
-      // Combining keys from all data sources
-      let allDates = new Set([
-        ...Object.keys(container1Data),
-        ...Object.keys(container2Data),
-        ...Object.keys(existingData),
-      ]);
-      
-      allDates.forEach(date => {
-        let dataFromContainer1 = container1Data[date] || [];
-        let dataFromContainer2 = container2Data[date] || [];
-        let existingDataForDate = existingData[date] || []; // This will be empty if includeExistingData is false
+        // Combine keys from container data and existing data (if included)
+        let allDates = new Set([
+            ...Object.keys(container1Data),
+            ...Object.keys(container2Data),
+            ...Object.keys(existingData), // Only included for '.firstdateinput'
+        ]);
     
-        mergedData[date] = [...new Set([...dataFromContainer1, ...dataFromContainer2, ...existingDataForDate])];
-      });
+        allDates.forEach(date => {
+            let dataFromContainer1 = container1Data[date] || [];
+            let dataFromContainer2 = container2Data[date] || [];
+            let existingDataForDate = existingData[date] || []; // This will be empty if existing data isn't included
     
-      for (let date in mergedData) {
-        if (mergedData[date].length === 0) {
-          delete mergedData[date];
+            // Merge data from containers and possibly existing data
+            mergedData[date] = [...new Set([...dataFromContainer1, ...dataFromContainer2, ...existingDataForDate])];
+        });
+    
+        // Cleanup: Remove dates with no selections
+        for (let date in mergedData) {
+            if (mergedData[date].length === 0) {
+                delete mergedData[date];
+            }
         }
-      }
     
-      // Use the targetInputSelector to dynamically target the input field for updating
-      $(targetInputSelector).val(JSON.stringify(mergedData));
+        // Update the target input field with the merged data
+        document.querySelector(targetInputSelector).value = JSON.stringify(mergedData);
     }
-    
-  
-   
-    
-    
-    
-    
     
     function getExistingData() {
-    const existingDataElement = document.querySelector('.paragraph-dhours');
-    return existingDataElement ? parseJson(existingDataElement.textContent.trim()) : {};
+        const existingDataElement = document.querySelector('.paragraph-dhours'); // Correct selector for existing data
+        return existingDataElement ? JSON.parse(existingDataElement.textContent || '{}') : {};
     }
+    
     
     function parseJson(jsonString) {
       if (!jsonString) {
