@@ -263,16 +263,16 @@ function updateAdjacentHours(currentlySelectedHours, formattedDate, dataToUpdate
   function mergeDataAndUpdateInput(targetInputSelector) {
     let mergedData = {};
   
-    // Determine if existing data should be fetched based on the target input selector
     const includeExistingData = targetInputSelector !== '#datefulldisabled';
-    const existingData = includeExistingData ? getExistingData() : {};
+    let existingData = includeExistingData ? getExistingData() : {}; // This is now always an object
   
+    // Combining keys from all data sources
     let allDates = new Set([
       ...Object.keys(container1Data),
       ...Object.keys(container2Data),
-      ...Object.keys(existingData), // This will be an empty object if includeExistingData is false
+      ...Object.keys(existingData),
     ]);
-  
+    
     allDates.forEach(date => {
       let dataFromContainer1 = container1Data[date] || [];
       let dataFromContainer2 = container2Data[date] || [];
@@ -304,9 +304,18 @@ function updateAdjacentHours(currentlySelectedHours, formattedDate, dataToUpdate
   }
   
   function parseJson(jsonString) {
-  try { return JSON.parse(jsonString); }
-  catch (error) { console.error("Error parsing JSON:", error); return null; }
+    if (!jsonString) {
+      console.warn("parseJson: Input is empty or undefined, returning empty object.");
+      return {};
+    }
+    try {
+      return JSON.parse(jsonString);
+    } catch (error) {
+      console.error("Error parsing JSON:", error);
+      return {};
+    }
   }
+  
   
   function updateCheckboxOptions(selectedDates, containerId) {
       const openingHourStr = $('#ouverture-lieu').text();
