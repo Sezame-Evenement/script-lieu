@@ -264,33 +264,45 @@ function updateAdjacentHours(currentlySelectedHours, formattedDate, dataToUpdate
   function mergeDataAndUpdateInput(targetInputSelector) {
     let mergedData = {};
   
-    // Determine if existing data should be fetched based on the target input selector
+    // This ensures we include or exclude existing data based on the target input selector
     const includeExistingData = targetInputSelector !== '#datefulldisabled';
-    const existingData = includeExistingData ? getExistingData() : {};
+    let existingData = {};
+    if (includeExistingData) {
+      existingData = getExistingData(); // Safely fetch existing data, which handles empty or malformed JSON
+    }
   
+    // Combine keys from all data sources into a unique set
     let allDates = new Set([
       ...Object.keys(container1Data),
       ...Object.keys(container2Data),
-      ...Object.keys(existingData), // This will be an empty object if includeExistingData is false
+      ...Object.keys(existingData),
     ]);
   
+    // Merge data from both containers and any existing data
     allDates.forEach(date => {
       let dataFromContainer1 = container1Data[date] || [];
       let dataFromContainer2 = container2Data[date] || [];
-      let existingDataForDate = existingData[date] || []; // This will be empty if includeExistingData is false
+      let existingDataForDate = existingData[date] || [];
   
       mergedData[date] = [...new Set([...dataFromContainer1, ...dataFromContainer2, ...existingDataForDate])];
     });
   
+    // Remove dates with no data
     for (let date in mergedData) {
       if (mergedData[date].length === 0) {
         delete mergedData[date];
       }
     }
   
-    // Use the targetInputSelector to dynamically target the input field for updating
-    $(targetInputSelector).val(JSON.stringify(mergedData));
+    // Update the target input with the merged data
+    const inputElement = document.querySelector(targetInputSelector);
+    if (inputElement) {
+      inputElement.value = JSON.stringify(mergedData);
+    } else {
+      console.warn(`Input element ${targetInputSelector} not found.`);
+    }
   }
+  
   
 
  
@@ -300,14 +312,18 @@ function updateAdjacentHours(currentlySelectedHours, formattedDate, dataToUpdate
   
   
   function getExistingData() {
-  const existingDataElement = document.querySelector('.paragraph-dhours');
-  return existingDataElement ? parseJson(existingDataElement.textContent.trim()) : {};
+    const existingDataElement = document.querySelector('.paragraph-dhours');
+    if (existingDataElement && existingDataElement.textContent.trim()) {
+      try {
+        return JSON.parse(existingDataElement.textContent.trim());
+      } catch (error) {
+        console.error("Error parsing JSON:", error);
+        return {};
+      }
+    }
+    return {};
   }
   
-  function parseJson(jsonString) {
-  try { return JSON.parse(jsonString); }
-  catch (error) { console.error("Error parsing JSON:", error); return null; }
-  }
   
   function updateCheckboxOptions(selectedDates, containerId) {
       const openingHourStr = $('#ouverture-lieu').text();
