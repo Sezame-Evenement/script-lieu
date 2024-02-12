@@ -52,32 +52,64 @@ document.addEventListener("DOMContentLoaded", function() {
       
     
     
-    const moreDaysButton = document.querySelector(".moredays");
-    moreDaysButton.addEventListener("click", function() {
-    const selectedDates = dateInput.selectedDates;
-    if (selectedDates.length > 0 && !initialSelectedDate) {
-    initialSelectedDate = selectedDates[0];
-    }
+      
+        const moreDaysButton = document.querySelector(".moredays");
+        moreDaysButton.addEventListener("click", function() {
+            const selectedDates = dateInput.selectedDates;
     
-    if (initialSelectedDate && selectedDates.length < 2) {
-    const lastSelectedDate = selectedDates[selectedDates.length - 1];
-    const nextDay = new Date(lastSelectedDate);
-    nextDay.setDate(lastSelectedDate.getDate() + 1);
+            // New logic to reset if second container is already visible
+            if (secondContainerVisible) {
+                // Reset stored selections for containers
+                container1Data = {};
+                container2Data = {};
     
-    dateInput.setDate([...selectedDates, nextDay]);
-    const secondCheckboxContainer = $(".checkbox-container").eq(1);
-    secondCheckboxContainer.html($(".checkbox-container").eq(0).html());
-    updateCheckboxOptions([nextDay], "container2");
-    secondCheckboxContainer.show();
-    secondContainerVisible = true;
+                // Clear checkbox selections
+                $(".checkbox-hour:checked").prop('checked', false); // Uncheck all checkboxes
     
-    $(".date-heading").eq(1).text(formatDate(nextDay));
-    $(".date-heading").eq(1).show();
-    }
-  
-    mergeDataAndUpdateInput('.firstdateinput');
-    mergeDataAndUpdateInput('#datefulldisabled');
-    });
+                // Hide second container and update visibility flag
+                $(".checkbox-container").eq(1).hide();
+                $(".date-heading").eq(1).hide();
+                secondContainerVisible = false;
+    
+                // Set the date picker to the initial selected date only
+                if (initialSelectedDate) {
+                    dateInput.setDate(initialSelectedDate);
+                }
+    
+                // Reset the input fields as needed
+                mergeDataAndUpdateInput('.firstdateinput');
+                mergeDataAndUpdateInput('#datefulldisabled');
+    
+                return; // Exit the function early to avoid adding another day
+            }
+    
+            // Existing logic for adding a second date
+            if (selectedDates.length > 0 && !initialSelectedDate) {
+                initialSelectedDate = selectedDates[0];
+            }
+    
+            if (initialSelectedDate && selectedDates.length < 2) {
+                const lastSelectedDate = selectedDates[selectedDates.length - 1];
+                const nextDay = new Date(lastSelectedDate);
+                nextDay.setDate(lastSelectedDate.getDate() + 1);
+    
+                dateInput.setDate([...selectedDates, nextDay]); // This will set the date to "DD/MM/YY, DD/MM/YY"
+                const secondCheckboxContainer = $(".checkbox-container").eq(1);
+                secondCheckboxContainer.html($(".checkbox-container").eq(0).html());
+                updateCheckboxOptions([nextDay], "container2");
+                secondCheckboxContainer.show();
+                secondContainerVisible = true;
+    
+                $(".date-heading").eq(1).text(formatDate(nextDay));
+                $(".date-heading").eq(1).show();
+            }
+    
+            mergeDataAndUpdateInput('.firstdateinput');
+            mergeDataAndUpdateInput('#datefulldisabled');
+        });
+    
+   
+    
     
     const firstDateInput = document.querySelector('.firstdateinput');
     document.addEventListener('change', function(event) {
