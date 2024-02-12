@@ -335,15 +335,26 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
     
-        // Update the target input field with the merged data
-        document.querySelector(targetInputSelector).value = JSON.stringify(mergedData);
+        // Safety check: Ensure the element exists before setting its value
+        const targetElement = document.querySelector(targetInputSelector);
+        if (targetElement) {
+            targetElement.value = JSON.stringify(mergedData);
+        } else {
+            console.error(`Element not found for selector: ${targetInputSelector}`);
+        }
     }
+    
+  
+   
+    
+    
+    
+    
     
     function getExistingData() {
-        const existingDataElement = document.querySelector('.paragraph-dhours'); // Correct selector for existing data
-        return existingDataElement ? JSON.parse(existingDataElement.textContent || '{}') : {};
+    const existingDataElement = document.querySelector('.paragraph-dhours');
+    return existingDataElement ? parseJson(existingDataElement.textContent.trim()) : {};
     }
-    
     
     function parseJson(jsonString) {
       if (!jsonString) {
