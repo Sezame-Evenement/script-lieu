@@ -175,17 +175,23 @@ document.addEventListener("DOMContentLoaded", function() {
         let minHour = Math.min(...currentlySelectedHours);
         let maxHour = Math.max(...currentlySelectedHours);
 
-        // Add adjacent hours if not already present
-        if (!currentlySelectedHours.has(minHour - 2)) { // Adjusted from minHour - 1 to minHour - 2
-            console.log(`Adding adjacent hour before: ${minHour - 2}`);
-            addTimeRange(minHour - 2, formattedDate, dataToUpdate, selectedDate);
+        // Add two adjacent hours before the minimum selected hour if not already present
+        for (let i = 1; i <= 2; i++) { // Loop to add two hours before
+            let hourToAdd = minHour - i;
+            if (!currentlySelectedHours.has(hourToAdd)) {
+                console.log(`Adding adjacent hour before: ${hourToAdd}`);
+                addTimeRange(hourToAdd, formattedDate, dataToUpdate, selectedDate);
+            }
         }
+
+        // Add one adjacent hour after the maximum selected hour if not already present
         if (!currentlySelectedHours.has(maxHour + 1)) {
             console.log(`Adding adjacent hour after: ${maxHour + 1}`);
             addTimeRange(maxHour + 1, formattedDate, dataToUpdate, selectedDate);
         }
     }
 }
+
 
   
   
