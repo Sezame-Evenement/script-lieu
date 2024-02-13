@@ -174,18 +174,19 @@ document.addEventListener("DOMContentLoaded", function() {
     if (currentlySelectedHours.size > 0) {
         let minHour = Math.min(...currentlySelectedHours);
         let maxHour = Math.max(...currentlySelectedHours);
-  
+
         // Add adjacent hours if not already present
-        if (!currentlySelectedHours.has(minHour - 1)) {
-            console.log(`Adding adjacent hour before: ${minHour - 1}`);
-            addTimeRange(minHour - 1, formattedDate, dataToUpdate, selectedDate);
+        if (!currentlySelectedHours.has(minHour - 2)) { // Adjusted from minHour - 1 to minHour - 2
+            console.log(`Adding adjacent hour before: ${minHour - 2}`);
+            addTimeRange(minHour - 2, formattedDate, dataToUpdate, selectedDate);
         }
         if (!currentlySelectedHours.has(maxHour + 1)) {
             console.log(`Adding adjacent hour after: ${maxHour + 1}`);
             addTimeRange(maxHour + 1, formattedDate, dataToUpdate, selectedDate);
         }
     }
-  }
+}
+
   
   
   
