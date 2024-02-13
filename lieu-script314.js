@@ -252,17 +252,20 @@ document.addEventListener("DOMContentLoaded", function() {
         let { adjustedHour, adjustedDate } = adjustDateForHour(hour, selectedDate);
         removeRange(data, adjustedHour, adjustedDate);
     
-        // If deselecting "0h à 1h", also remove "22h à 23h" and "23h à 0h" for the previous day
+        // Special handling for deselecting "23h à 0h"
+        if (hour === 23) {
+            // Adjust for the next day to remove "0h à 1h"
+            let nextDay = new Date(selectedDate);
+            nextDay.setDate(nextDay.getDate() + 1);
+            removeRange(data, 0, nextDay); // Attempt to remove "0h à 1h" for the next day
+        }
+    
+        // Handle the scenario for deselecting "0h à 1h" as previously implemented
         if (hour === 0) {
-            // Adjust for previous day
             let prevDay = new Date(selectedDate);
             prevDay.setDate(prevDay.getDate() - 1);
-            
-            // Remove "22h à 23h"
-            removeRange(data, 22, prevDay);
-    
-            // Remove "23h à 0h", adjustedHour is already 23 due to the adjustDateForHour logic
-            removeRange(data, 23, prevDay);
+            removeRange(data, 22, prevDay); // Remove "22h à 23h"
+            removeRange(data, 23, prevDay); // Remove "23h à 0h"
         }
     
         console.log("removeTimeRange: Final data state:", data);
@@ -284,6 +287,7 @@ document.addEventListener("DOMContentLoaded", function() {
             console.log(`removeRange: ${range} not found for date ${targetFormattedDate}`);
         }
     }
+    
     
 
 
