@@ -248,25 +248,43 @@ document.addEventListener("DOMContentLoaded", function() {
     function removeTimeRange(hour, date, data, selectedDate) {
         console.log("removeTimeRange: Initial data state:", data);
     
-        // Adjust for specific hour removal logic, including shifting days for edge cases
+        // Basic removal for the current hour
         let { adjustedHour, adjustedDate } = adjustDateForHour(hour, selectedDate);
-        let targetFormattedDate = adjustedDate.toLocaleDateString('fr-CA');
-        const endHour = (adjustedHour + 1) % 24;
-        const range = `${adjustedHour}h à ${endHour}h`;
+        removeRange(data, adjustedHour, adjustedDate);
     
-        if (data[targetFormattedDate] && data[targetFormattedDate].includes(range)) {
-            const index = data[targetFormattedDate].indexOf(range);
-            data[targetFormattedDate].splice(index, 1);
-            console.log("removeTimeRange: Removed range", range, "from date", targetFormattedDate);
-            if (data[targetFormattedDate].length === 0) {
-                delete data[targetFormattedDate]; // Clean up if no more ranges for the date
-            }
-        } else {
-            console.log("removeTimeRange: Range", range, "not found for date", targetFormattedDate);
+        // If deselecting "0h à 1h", also remove "22h à 23h" and "23h à 0h" for the previous day
+        if (hour === 0) {
+            // Adjust for previous day
+            let prevDay = new Date(selectedDate);
+            prevDay.setDate(prevDay.getDate() - 1);
+            
+            // Remove "22h à 23h"
+            removeRange(data, 22, prevDay);
+    
+            // Remove "23h à 0h", adjustedHour is already 23 due to the adjustDateForHour logic
+            removeRange(data, 23, prevDay);
         }
     
         console.log("removeTimeRange: Final data state:", data);
     }
+    
+    function removeRange(data, hour, date) {
+        const targetFormattedDate = date.toLocaleDateString('fr-CA');
+        const endHour = (hour + 1) % 24;
+        const range = `${hour}h à ${endHour}h`;
+    
+        if (data[targetFormattedDate] && data[targetFormattedDate].includes(range)) {
+            const index = data[targetFormattedDate].indexOf(range);
+            data[targetFormattedDate].splice(index, 1);
+            console.log(`removeRange: Removed ${range} from date ${targetFormattedDate}`);
+            if (data[targetFormattedDate].length === 0) {
+                delete data[targetFormattedDate]; // Clean up if no more ranges for the date
+            }
+        } else {
+            console.log(`removeRange: ${range} not found for date ${targetFormattedDate}`);
+        }
+    }
+    
 
 
     
