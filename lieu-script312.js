@@ -211,99 +211,64 @@ document.addEventListener("DOMContentLoaded", function() {
     
     
     
-    function addTimeRange(hour, date, data, selectedDate, isPrevDay = false, isNextDay = false) {
-        // Log initial input state before any modifications
-        console.log("addTimeRange: Initial data state:", data);
-      
-        // Handle edge cases to prevent unexpected behavior
-        if (hour < 0) {
-          console.warn("addTimeRange: Hour out of bounds (less than 0). Shifting to previous day and adjusting hour to 23.");
-          hour = 23;
-          isPrevDay = true;
-        } else if (hour > 23) {
-          console.warn("addTimeRange: Hour out of bounds (greater than 23). Shifting to next day and adjusting hour to 0.");
-          hour = 0;
-          isNextDay = true;
-        }
-      
-        // Adjust date based on isPrevDay/isNextDay flags
-        const targetDate = new Date(selectedDate);
-        if (isPrevDay) {
-          targetDate.setDate(targetDate.getDate() - 1);
-        } else if (isNextDay) {
-          targetDate.setDate(targetDate.getDate() + 1);
-        }
-      
-        // Format date for consistency and readability
-        const targetFormattedDate = targetDate.toLocaleDateString('fr-CA');
-      
-        // Calculate end hour for range
-        const endHour = (hour + 1) % 24;
-        const range = `${hour}h à ${endHour}h`;
-      
-        // Access or create the array for the target date
-        data[targetFormattedDate] = data[targetFormattedDate] || [];
-      
-        // Check if range already exists and log potential additions
-        if (!data[targetFormattedDate].includes(range)) {
-          console.log("addTimeRange: Adding range", range, "to date", targetFormattedDate);
-          data[targetFormattedDate].push(range);
-        } else {
-          console.log("addTimeRange: Range", range, "already exists for date", targetFormattedDate);
-        }
-      
-        // Log final data state after modifications
-        console.log("addTimeRange: Final data state:", data);
-      }
-      
-      function removeTimeRange(hour, date, data, selectedDate, isPrevDay = false, isNextDay = false) {
-        // Log initial input state before any modifications
-        console.log("removeTimeRange: Initial data state:", data);
-      
-        // Adjust date based on isPrevDay/isNextDay flags
-        let targetDate = new Date(selectedDate);
-        targetDate = adjustDateForHour(hour, targetDate);
-      
-        // Attempt to remove range for the target date and log outcome
-        const removed = removeRangeFromData(hour, targetDate, data);
-        if (removed) {
-          console.log("removeTimeRange: Removed range", removed, "from date", targetDate.toLocaleDateString('fr-CA'));
-        } else {
-          console.log("removeTimeRange: Range not found for removal from date", targetDate.toLocaleDateString('fr-CA'));
-        }
-      
-        // Handle edge cases if removing 0 or 23 hours and log actions
-        if (hour === 0) {
-          let prevDate = new Date(selectedDate);
-          prevDate.setDate(prevDate.getDate() - 1);
-          const removedPrev = removeRangeFromData(23, prevDate, data);
-          if (removedPrev) {
-            console.log("removeTimeRange: Removed range 23h from previous day", prevDate.toLocaleDateString('fr-CA'));
-          }
-        } else if (hour === 23) {
-          let nextDate = new Date(selectedDate);
-          nextDate.setDate(nextDate.getDate() + 1);
-          const removedNext = removeRangeFromData(0, nextDate, data);
-          if (removedNext) {
-            console.log("removeTimeRange: Removed range 0h from next day", nextDate.toLocaleDateString('fr-CA'));
-          }
-        }
-      
-        // Log final data state after modifications
-        console.log("removeTimeRange: Final data state:", data);
-      }
-      
+ 
      
-    function adjustDateForHour(hour, date) {
-    if (hour < 0) {
-    hour = 23;
-    date.setDate(date.getDate() - 1);
-    } else if (hour > 23) {
-    hour = 0;
-    date.setDate(date.getDate() + 1);
+      function adjustDateForHour(hour, selectedDate) {
+        let adjustedDate = new Date(selectedDate);
+        if (hour < 0) {
+            adjustedDate.setDate(adjustedDate.getDate() - 1); // Move to the previous day
+            hour = 24 + hour; // Adjust hour to a valid 24-hour range
+        } else if (hour > 23) {
+            adjustedDate.setDate(adjustedDate.getDate() + 1); // Move to the next day
+            hour = hour - 24;
+        }
+        return { adjustedHour: hour, adjustedDate };
     }
-    return date;
+
+
+    function addTimeRange(hour, date, data, selectedDate) {
+        console.log("addTimeRange: Initial data state:", data);
+    
+        // Adjust for negative hours or hours beyond 23, shifting date accordingly
+        let { adjustedHour, adjustedDate } = adjustDateForHour(hour, selectedDate);
+        const targetFormattedDate = adjustedDate.toLocaleDateString('fr-CA');
+        const endHour = (adjustedHour + 1) % 24;
+        const range = `${adjustedHour}h à ${endHour}h`;
+    
+        data[targetFormattedDate] = data[targetFormattedDate] || [];
+        if (!data[targetFormattedDate].includes(range)) {
+            console.log("addTimeRange: Adding range", range, "to date", targetFormattedDate);
+            data[targetFormattedDate].push(range);
+        } else {
+            console.log("addTimeRange: Range", range, "already exists for date", targetFormattedDate);
+        }
+        console.log("addTimeRange: Final data state:", data);
     }
+    
+    function removeTimeRange(hour, date, data, selectedDate) {
+        console.log("removeTimeRange: Initial data state:", data);
+    
+        // Adjust for specific hour removal logic, including shifting days for edge cases
+        let { adjustedHour, adjustedDate } = adjustDateForHour(hour, selectedDate);
+        let targetFormattedDate = adjustedDate.toLocaleDateString('fr-CA');
+        const endHour = (adjustedHour + 1) % 24;
+        const range = `${adjustedHour}h à ${endHour}h`;
+    
+        if (data[targetFormattedDate] && data[targetFormattedDate].includes(range)) {
+            const index = data[targetFormattedDate].indexOf(range);
+            data[targetFormattedDate].splice(index, 1);
+            console.log("removeTimeRange: Removed range", range, "from date", targetFormattedDate);
+            if (data[targetFormattedDate].length === 0) {
+                delete data[targetFormattedDate]; // Clean up if no more ranges for the date
+            }
+        } else {
+            console.log("removeTimeRange: Range", range, "not found for date", targetFormattedDate);
+        }
+    
+        console.log("removeTimeRange: Final data state:", data);
+    }
+
+
     
     function removeRangeFromData(hour, date, data) {
     const targetFormattedDate = date.toLocaleDateString('fr-CA');
