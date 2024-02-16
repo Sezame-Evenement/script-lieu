@@ -175,30 +175,30 @@ document.addEventListener("DOMContentLoaded", function() {
         let minHour = Math.min(...currentlySelectedHours);
         let maxHour = Math.max(...currentlySelectedHours);
 
-        // Special handling for wrapping around to the previous day
+        // Special handling for wrapping around to the previous day for minimum hour
         if (minHour === 0) {
-            // Specifically add 22h à 23h and 23h à 0h for the case of 0h à 1h selection
             addTimeRange(-2, formattedDate, dataToUpdate, selectedDate); // 22h à 23h on the previous day
             addTimeRange(-1, formattedDate, dataToUpdate, selectedDate); // 23h à 0h on the previous day
         } else {
-            // Add two adjacent hours before the minimum selected hour if not already present
             for (let i = 1; i <= 2; i++) {
                 let hourToAdd = minHour - i;
                 if (!currentlySelectedHours.has(hourToAdd)) {
-                    console.log(`Adding adjacent hour before: ${hourToAdd}`);
                     addTimeRange(hourToAdd, formattedDate, dataToUpdate, selectedDate);
                 }
             }
         }
 
-        // Add two adjacent hours after the maximum selected hour if not already present
-        if (!currentlySelectedHours.has(maxHour + 1)) {
-            console.log(`Adding adjacent hour after: ${maxHour + 1}`);
-            addTimeRange(maxHour + 1, formattedDate, dataToUpdate, selectedDate);
-        }
-        if (!currentlySelectedHours.has(maxHour + 2)) {
-            console.log(`Adding adjacent hour after: ${maxHour + 2}`);
-            addTimeRange(maxHour + 2, formattedDate, dataToUpdate, selectedDate);
+        // Special handling for wrapping around to the next day for maximum hour
+        if (maxHour === 23) {
+            addTimeRange(24, formattedDate, dataToUpdate, selectedDate); // 0h à 1h on the next day
+            addTimeRange(25, formattedDate, dataToUpdate, selectedDate); // 1h à 2h on the next day
+        } else {
+            for (let j = 1; j <= 2; j++) {
+                let hourToAdd = maxHour + j;
+                if (!currentlySelectedHours.has(hourToAdd)) {
+                    addTimeRange(hourToAdd, formattedDate, dataToUpdate, selectedDate);
+                }
+            }
         }
     }
 }
