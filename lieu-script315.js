@@ -191,10 +191,14 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
-        // Add one adjacent hour after the maximum selected hour if not already present
+        // Add two adjacent hours after the maximum selected hour if not already present
         if (!currentlySelectedHours.has(maxHour + 1)) {
             console.log(`Adding adjacent hour after: ${maxHour + 1}`);
             addTimeRange(maxHour + 1, formattedDate, dataToUpdate, selectedDate);
+        }
+        if (!currentlySelectedHours.has(maxHour + 2)) {
+            console.log(`Adding adjacent hour after: ${maxHour + 2}`);
+            addTimeRange(maxHour + 2, formattedDate, dataToUpdate, selectedDate);
         }
     }
 }
