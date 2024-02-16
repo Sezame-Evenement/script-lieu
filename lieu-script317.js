@@ -250,30 +250,35 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     
     function removeTimeRange(hour, date, data, selectedDate) {
-        console.log("removeTimeRange: Initial data state:", data);
-    
-        // Basic removal for the current hour
-        let { adjustedHour, adjustedDate } = adjustDateForHour(hour, selectedDate);
-        removeRange(data, adjustedHour, adjustedDate);
-    
-        // Special handling for deselecting "23h à 0h"
-        if (hour === 23) {
-            // Adjust for the next day to remove "0h à 1h"
-            let nextDay = new Date(selectedDate);
-            nextDay.setDate(nextDay.getDate() + 1);
-            removeRange(data, 0, nextDay); // Attempt to remove "0h à 1h" for the next day
-        }
-    
-        // Handle the scenario for deselecting "0h à 1h" as previously implemented
-        if (hour === 0) {
-            let prevDay = new Date(selectedDate);
-            prevDay.setDate(prevDay.getDate() - 1);
-            removeRange(data, 22, prevDay); // Remove "22h à 23h"
-            removeRange(data, 23, prevDay); // Remove "23h à 0h"
-        }
-    
-        console.log("removeTimeRange: Final data state:", data);
-    }
+      console.log("removeTimeRange: Initial data state:", data);
+  
+      // Basic removal for the current hour
+      let { adjustedHour, adjustedDate } = adjustDateForHour(hour, selectedDate);
+      removeRange(data, adjustedHour, adjustedDate);
+  
+      // Adjust for the next day if deselecting "23h à 0h"
+      if (hour === 23) {
+          let nextDay = new Date(selectedDate);
+          nextDay.setDate(nextDay.getDate() + 1);
+          // Attempt to remove "0h à 1h" for the next day
+          removeRange(data, 0, nextDay);
+          // Additionally remove "1h à 2h" for the next day, addressing the issue
+          removeRange(data, 1, nextDay);
+      }
+  
+      // Handle the scenario for deselecting "0h à 1h" as previously implemented
+      if (hour === 0) {
+          let prevDay = new Date(selectedDate);
+          prevDay.setDate(prevDay.getDate() - 1);
+          // Remove "22h à 23h"
+          removeRange(data, 22, prevDay);
+          // Remove "23h à 0h"
+          removeRange(data, 23, prevDay);
+      }
+  
+      console.log("removeTimeRange: Final data state:", data);
+  }
+  
     
     function removeRange(data, hour, date) {
         const targetFormattedDate = date.toLocaleDateString('fr-CA');
